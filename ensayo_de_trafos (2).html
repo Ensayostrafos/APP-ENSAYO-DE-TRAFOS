@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ENSAYO DE TRAFOS</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#14202E">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ENSAYO TRAFOS">
+<style>
+  :root{
+    --navy: #14202E; --navy-2: #1E3247; --amber: #F2A900; --amber-dark: #C98600;
+    --gray-100: #F5F6F7; --gray-300: #DADFE3; --gray-500: #7C8894; --white: #FFFFFF;
+    --danger: #C0392B; --ok: #2E7D4F; --warn: #B8860B; --plum: #6B4E9E;
+    --radius: 10px; --shadow: 0 2px 10px rgba(20,32,46,0.12);
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--gray-100); color: var(--navy); min-height:100vh; }
+  .hazard-strip{ height:6px; background: repeating-linear-gradient(135deg, var(--amber), var(--amber) 14px, var(--navy) 14px, var(--navy) 28px); }
+  header{ background: var(--navy); color: var(--white); padding: 20px 20px 0; }
+  header h1{ margin:0 0 4px; font-size: 1.2rem; letter-spacing: 0.3px; }
+  header p{ margin:0 0 16px; color: var(--gray-300); font-size: 0.82rem; }
+  .tabs{ display:flex; gap:4px; }
+  .tab-btn{ flex:1; background: transparent; color: var(--gray-300); border: none; border-bottom: 3px solid transparent; padding: 12px 6px; font-size: 0.78rem; font-weight: 700; cursor:pointer; }
+  .tab-btn.active{ color: var(--white); border-bottom-color: var(--amber); }
+  main{ max-width: 560px; margin: 0 auto; padding: 20px 16px 60px; }
+  .view{ display:none; }
+  .view.active{ display:block; }
+  .card{ background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px; }
+  .field{ margin-bottom: 18px; }
+  .field:last-child{ margin-bottom: 0; }
+  label{ display:block; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--navy-2); margin-bottom: 8px; }
+  select, input[type="text"], textarea{ width:100%; padding: 13px 12px; font-size: 1rem; border: 1.5px solid var(--gray-300); border-radius: 8px; background: var(--white); color: var(--navy); appearance: none; font-family: inherit; }
+  input[readonly]{ background: var(--gray-100); color: var(--gray-500); }
+  textarea{ min-height: 90px; resize: vertical; }
+  select:focus, input[type="text"]:focus, textarea:focus{ outline: none; border-color: var(--amber-dark); }
+  select:disabled{ background: var(--gray-100); color: var(--gray-500); }
+  .select-wrap{ position: relative; }
+  .select-wrap::after{ content: "▾"; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--gray-500); pointer-events: none; }
+  .hidden{ display:none !important; }
+  .sub-block{ margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--gray-300); }
+  .checkbox-row{ display:flex; align-items:center; gap: 10px; padding: 10px 0; }
+  .checkbox-row input{ width:18px; height:18px; }
+  .checkbox-row label{ margin:0; text-transform:none; font-weight:500; font-size:0.95rem; color: var(--navy); }
+  .map-actions{ display:flex; gap:10px; margin-top: 10px; flex-wrap: wrap; }
+  button{ font-family: inherit; font-size: 0.9rem; font-weight: 700; border-radius: 8px; border: none; padding: 11px 16px; cursor: pointer; }
+  .btn-secondary{ background: var(--gray-100); color: var(--navy); border: 1.5px solid var(--gray-300); }
+  .btn-secondary:hover{ background: var(--gray-300); }
+  .coords-readout{ margin-top: 12px; font-size: 0.85rem; color: var(--navy-2); background: var(--gray-100); border-radius: 8px; padding: 10px 12px; }
+  .coords-readout.empty{ color: var(--gray-500); font-style: italic; }
+  a.maps-link{ color: var(--amber-dark); font-weight: 700; text-decoration: none; }
+  a.maps-link:hover{ text-decoration: underline; }
+  .submit-btn{ width:100%; background: var(--navy); color: var(--white); padding: 15px; font-size: 1rem; margin-top: 4px; }
+  .submit-btn:hover{ background: var(--navy-2); }
+  .submit-btn:disabled{ background: var(--gray-500); cursor: not-allowed; }
+  .status-msg{ margin-top: 12px; padding: 12px 14px; border-radius: 8px; font-size: 0.9rem; display:none; }
+  .status-msg.ok{ background: #E7F4EC; color: var(--ok); display:block; }
+  .status-msg.err{ background: #FBEAE8; color: var(--danger); display:block; }
+  .status-msg.warn{ background: #FBF3DA; color: var(--warn); display:block; }
+  .hint{ font-size: 0.78rem; color: var(--gray-500); margin-top: 6px; line-height: 1.4; }
+  .lookup-banner{ display:none; margin-top: 10px; padding: 12px 14px; border-radius: 8px; font-size: 0.85rem; line-height:1.5; }
+  .lookup-banner.found{ display:block; background:#FBF3DA; color:var(--warn); border:1px solid #EFDCA0; }
+  .lookup-banner.new{ display:block; background:#E7F4EC; color:var(--ok); border:1px solid #C7E5D1; }
+  .file-input{ border: 1.5px dashed var(--gray-300); border-radius: 8px; padding: 14px; text-align:center; font-size: 0.85rem; color: var(--gray-500); }
+  .file-input input{ width:100%; margin-top:8px; }
+  .required-mark{ color: var(--danger); }
+  .search-row{ display:flex; gap:10px; }
+  .search-row input, .search-row select{ flex:1; }
+  .result-card{ display:none; }
+  .result-row{ display:flex; justify-content:space-between; padding: 8px 0; border-bottom: 1px solid var(--gray-100); font-size:0.9rem; }
+  .result-row span:first-child{ color: var(--gray-500); }
+  .result-row span:last-child{ font-weight:600; text-align:right; }
+  .badge{ display:inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.78rem; font-weight:700; }
+  .badge.apto{ background:#E7F4EC; color:var(--ok); }
+  .badge.obs{ background:#FBF3DA; color:var(--warn); }
+  .badge.no-apto{ background:#FBEAE8; color:var(--danger); }
+  .badge.venta{ background:#EFE7F7; color:var(--plum); }
+  .badge.en-uso{ background:#E4EEF7; color:#2E5D8A; }
+  .conn-banner{ display:none; text-align:center; font-size:0.8rem; font-weight:700; padding: 8px; color: var(--white); }
+  .conn-banner.offline{ display:block; background: var(--danger); }
+  .conn-banner.pending{ display:block; background: var(--amber-dark); color: var(--navy); }
+  .conn-banner.synced{ display:block; background: var(--ok); }
+  .list-result{ padding: 12px; border: 1.5px solid var(--gray-300); border-radius: 8px; margin-bottom:8px; cursor:pointer; }
+  .list-result:hover{ border-color: var(--amber-dark); }
+  .list-result .top-row{ display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+  .list-result .serie{ font-weight:700; }
+  .list-result .detail{ font-size:0.8rem; color: var(--gray-500); line-height:1.5; }
+  .lock-row{ display:flex; gap:8px; align-items:center; margin-top:6px; }
+  .lock-note{ font-size:0.78rem; color: var(--warn); }
+  iframe.tool-frame{ width:100%; height:80vh; border:none; border-radius: var(--radius); background: var(--white); box-shadow: var(--shadow); }
+</style>
+</head>
+<body>
+  <div class="hazard-strip"></div>
+  <header>
+    <h1>ENSAYO DE TRAFOS</h1>
+    <p>Predio de transformadores — carga y consulta de estado</p>
+    <div class="tabs">
+      <button class="tab-btn active" data-view="cargar">Cargar Ensayo</button>
+      <button class="tab-btn" data-view="consultar">Consultar Trafo</button>
+      <button class="tab-btn" data-view="calculadora">Calcular Resistencia de Devanados</button>
+    </div>
+  </header>
+
+  <div id="connBanner" class="conn-banner"></div>
+
+  <main>
+    <!-- ============ VISTA: CARGAR ENSAYO ============ -->
+    <div id="view-cargar" class="view active">
+      <form id="ensayoForm">
+
+        <div class="card">
+          <div class="field">
+            <label for="serie">N° de Serie <span class="required-mark">*</span></label>
+            <input type="text" id="serie" name="serie" placeholder="Ej: A12345" required>
+            <div id="lookupBanner" class="lookup-banner"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="field">
+            <label for="ubicacion">Ubicación actual <span class="required-mark">*</span></label>
+            <div class="select-wrap">
+              <select id="ubicacion" name="ubicacion" required>
+                <option value="" disabled selected>Seleccioná una opción</option>
+                <option value="PREDIO TRAFOS CD">PREDIO TRAFOS CD</option>
+                <option value="PREDIO ELECTRICO VH">PREDIO ELECTRICO VH</option>
+                <option value="PREDIO TRAFOS USINA ZORRO 2">PREDIO TRAFOS USINA ZORRO 2</option>
+                <option value="POZO">POZO</option>
+              </select>
+            </div>
+            <div id="pozoBlock" class="sub-block hidden">
+              <label for="pozoDetalle">Especifique el pozo</label>
+              <input type="text" id="pozoDetalle" name="pozoDetalle" placeholder="Ej: Pozo Norte 4">
+            </div>
+            <div id="coordsBlock" class="sub-block hidden">
+              <label>Coordenadas (GPS)</label>
+              <p class="hint">Apretá el botón para cargar tu ubicación actual con el GPS del celular.</p>
+              <div class="map-actions">
+                <button type="button" id="useGpsBtn" class="btn-secondary">📍 Usar mi ubicación</button>
+                <button type="button" id="clearCoordsBtn" class="btn-secondary">Borrar coordenadas</button>
+              </div>
+              <div id="coordsReadout" class="coords-readout empty">Sin coordenadas cargadas todavía.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="field">
+            <label for="marca">Marca <span class="required-mark">*</span></label>
+            <div class="select-wrap">
+              <select id="marca" name="marca" required>
+                <option value="" disabled selected>Elegir</option>
+                <option>Argeltra</option><option>Artrans</option><option>Fohama</option>
+                <option>Tadeo</option><option>Mayo</option><option>TTE</option>
+                <option>Vasile</option><option>Weg</option><option value="Otro">Otro</option>
+              </select>
+            </div>
+            <div id="marcaOtroBlock" class="sub-block hidden">
+              <input type="text" id="marcaOtro" placeholder="Especifique la marca">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="tipo">Tipo de transformador <span class="required-mark">*</span></label>
+            <div class="select-wrap">
+              <select id="tipo" name="tipo" required>
+                <option value="" disabled selected>Elegir</option>
+                <option>Trifásico</option><option>Hexafásico</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="potencia">Potencia kVA <span class="required-mark">*</span></label>
+            <div class="select-wrap">
+              <select id="potencia" name="potencia" required>
+                <option value="" disabled selected>Elegir</option>
+                <option>630 kVA</option><option>350 kVA</option><option>250 kVA</option>
+                <option>200 kVA</option><option>150 kVA</option><option>100 kVA</option>
+                <option>75 kVA</option><option>63 kVA</option><option>50 kVA</option>
+                <option>25 kVA</option><option>10 kVA</option><option>5 kVA</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+            <div id="potenciaOtroBlock" class="sub-block hidden">
+              <input type="text" id="potenciaOtro" placeholder="Especifique la potencia">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="tensionP">Tensión primaria <span class="required-mark">*</span></label>
+            <div class="select-wrap">
+              <select id="tensionP" name="tensionP" required>
+                <option value="" disabled selected>Elegir</option>
+                <option>33 kV</option><option>13,2 kV</option><option>10,4 kV</option>
+                <option>13,2/10,4 kV</option><option>0,48 kV</option><option value="Otro">Otro</option>
+              </select>
+            </div>
+            <div id="tensionPOtroBlock" class="sub-block hidden">
+              <input type="text" id="tensionPOtro" placeholder="Especifique la tensión primaria">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="tensionS">Tensión secundaria <span class="required-mark">*</span></label>
+            <div class="select-wrap">
+              <select id="tensionS" name="tensionS" required>
+                <option value="" disabled selected>Elegir</option>
+                <option>6,6 kV</option><option>3,9 kV</option><option>3,6 kV</option>
+                <option>3,05 kV</option><option>2,6 kV</option><option>2,2 kV</option>
+                <option>0,48 kV</option><option>0,40 kV</option><option value="Otro">Otro</option>
+              </select>
+            </div>
+            <div id="tensionSOtroBlock" class="sub-block hidden">
+              <input type="text" id="tensionSOtro" placeholder="Especifique la tensión secundaria">
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="field">
+            <label for="estadoVisual">Estado Visual del Transformador <span class="required-mark">*</span></label>
+            <div class="select-wrap">
+              <select id="estadoVisual" name="estadoVisual" required>
+                <option value="" disabled selected>Elegir</option>
+                <option>Sin anomalías</option>
+                <option>Requiere reparación</option>
+              </select>
+            </div>
+            <p class="hint" id="estadoVisualHint"></p>
+          </div>
+        </div>
+
+        <div class="card" id="camposEnsayoCard">
+          <div class="field">
+            <label>Ensayos realizados <span class="required-mark">*</span></label>
+            <div class="checkbox-row">
+              <input type="checkbox" id="ensayoAislacion" value="Medición de aislación">
+              <label for="ensayoAislacion">Medición de aislación</label>
+            </div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="ensayoResistencia" value="Medición de resistencia de devanados">
+              <label for="ensayoResistencia">Medición de resistencia de devanados</label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="indicePolarizacion">Índice de polarización <span class="required-mark">*</span></label>
+            <div class="select-wrap">
+              <select id="indicePolarizacion" name="indicePolarizacion" required>
+                <option value="" disabled selected>Elegir</option>
+                <option>menor o igual a 4</option><option>entre 4 y 3</option>
+                <option>entre 3 y 2</option><option>entre 2 y 1,5</option>
+                <option>menor que 1,5</option><option>menor que 1</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="relacionAbsorcion">Relación de Absorción <span class="required-mark">*</span></label>
+            <div class="select-wrap">
+              <select id="relacionAbsorcion" name="relacionAbsorcion" required>
+                <option value="" disabled selected>Elegir</option>
+                <option>menor o igual a 1,6</option><option>entre 1,6 y 1,4</option>
+                <option>entre 1,4 y 1,25</option><option>entre 1,25 y 1,1</option>
+                <option>menor a 1,1</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="desviacionResistencia">Desviación de la resistencia de devanado <span class="required-mark">*</span></label>
+            <div class="select-wrap">
+              <select id="desviacionResistencia" name="desviacionResistencia" required>
+                <option value="" disabled selected>Elegir</option>
+                <option>Menor a 5%</option><option>Mayor a 5%</option><option>Sin medición</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="estadoConmutador">Estado del conmutador <span class="required-mark">*</span></label>
+            <div class="select-wrap">
+              <select id="estadoConmutador" name="estadoConmutador" required>
+                <option value="" disabled selected>Elegir</option>
+                <option>Normal</option><option>Dudoso</option><option>Defectuoso</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="field">
+            <label for="estadoServicio">Estado para el servicio <span class="required-mark">*</span></label>
+            <div class="select-wrap">
+              <select id="estadoServicio" name="estadoServicio" required>
+                <option value="" disabled selected>Elegir</option>
+                <option>Apto para servicio</option>
+                <option>Apto con observaciones</option>
+                <option>No apto para servicio</option>
+                <option>Venta</option>
+                <option>En uso</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="comentarios">Comentarios <span class="required-mark">*</span></label>
+            <textarea id="comentarios" name="comentarios" required></textarea>
+          </div>
+
+          <div class="field">
+            <label id="fotoPlacaLabel" for="fotoPlaca">Foto de placa</label>
+            <div class="file-input">
+              <input type="file" id="fotoPlaca" accept="image/*" capture="environment">
+            </div>
+          </div>
+
+          <div class="field">
+            <label id="fotoEnsayoLabel" for="fotoEnsayo">Foto de ensayo</label>
+            <div class="file-input">
+              <input type="file" id="fotoEnsayo" accept="image/*,application/pdf" capture="environment">
+            </div>
+            <p class="hint" id="fotoHint">Podés sacar una foto o subir un PDF ya armado. Se guarda siempre como PDF. Obligatoria cuando el estado es "Apto para servicio" o cuando el estado visual es "Requiere reparación".</p>
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submitBtn">Guardar ensayo</button>
+        <div id="statusMsg" class="status-msg"></div>
+      </form>
+    </div>
+
+    <!-- ============ VISTA: CONSULTAR ============ -->
+    <div id="view-consultar" class="view">
+      <div class="card">
+        <label for="searchSerie">Buscar por N° de Serie</label>
+        <div class="search-row">
+          <input type="text" id="searchSerie" placeholder="Ej: A12345">
+          <button type="button" id="searchBtn" class="btn-secondary">Buscar</button>
+        </div>
+
+        <div class="sub-block">
+          <label for="searchEstado">O filtrar por Estado para el servicio</label>
+          <div class="search-row">
+            <div class="select-wrap" style="flex:1;">
+              <select id="searchEstado">
+                <option value="" disabled selected>Elegir estado</option>
+                <option>Apto para servicio</option>
+                <option>Apto con observaciones</option>
+                <option>No apto para servicio</option>
+                <option>Venta</option>
+                <option>En uso</option>
+              </select>
+            </div>
+            <button type="button" id="searchEstadoBtn" class="btn-secondary">Filtrar</button>
+          </div>
+        </div>
+
+        <div id="searchStatus" class="status-msg"></div>
+        <div id="listResults"></div>
+      </div>
+
+      <div class="card">
+        <button type="button" id="downloadBtn" class="btn-secondary" style="width:100%;">📥 Descargar planilla de ensayos (CSV)</button>
+        <div id="downloadStatus" class="status-msg"></div>
+      </div>
+
+      <div class="card result-card" id="resultCard">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <strong id="resultSerie" style="font-size:1.05rem;"></strong>
+          <span id="resultBadge" class="badge"></span>
+        </div>
+        <div class="result-row"><span>Marca</span><span id="resMarca"></span></div>
+        <div class="result-row"><span>Tipo</span><span id="resTipo"></span></div>
+        <div class="result-row"><span>Potencia</span><span id="resPotencia"></span></div>
+        <div class="result-row"><span>Tensión primaria</span><span id="resTensionP"></span></div>
+        <div class="result-row"><span>Tensión secundaria</span><span id="resTensionS"></span></div>
+        <div class="result-row"><span>Estado visual</span><span id="resEstadoVisual"></span></div>
+        <div class="result-row"><span>Ubicación</span><span id="resUbicacion"></span></div>
+        <div class="result-row"><span>Coordenadas</span><span id="resCoords"></span></div>
+        <div class="result-row"><span>Último ensayo</span><span id="resFecha"></span></div>
+        <div class="result-row"><span>Foto de placa</span><span id="resFotoPlaca"></span></div>
+        <div class="result-row"><span>Foto de ensayo</span><span id="resFotoEnsayo"></span></div>
+
+        <div class="sub-block">
+          <button type="button" id="fichaBtn" class="btn-secondary" style="width:100%;">📄 Ver ficha del ensayo (PDF)</button>
+          <div id="fichaStatus" class="status-msg"></div>
+        </div>
+
+        <div class="sub-block">
+          <label for="updUbicacion">Actualizar ubicación</label>
+          <div class="select-wrap">
+            <select id="updUbicacion">
+              <option value="" disabled selected>Seleccioná una opción</option>
+              <option value="PREDIO TRAFOS CD">PREDIO TRAFOS CD</option>
+              <option value="PREDIO ELECTRICO VH">PREDIO ELECTRICO VH</option>
+              <option value="PREDIO TRAFOS USINA ZORRO 2">PREDIO TRAFOS USINA ZORRO 2</option>
+              <option value="POZO">POZO</option>
+            </select>
+          </div>
+          <div id="updPozoBlock" class="sub-block hidden">
+            <label for="updPozoDetalle">Identificación del pozo</label>
+            <input type="text" id="updPozoDetalle" placeholder="Ej: Pozo Norte 4">
+            <div id="updPozoLockRow" class="lock-row hidden">
+              <span class="lock-note">🔒 Identificación permanente, protegida contra cambios accidentales.</span>
+              <button type="button" id="updPozoUnlockBtn" class="btn-secondary">🔓 Modificar identificación</button>
+            </div>
+          </div>
+          <div id="updCoordsBlock" class="sub-block hidden">
+            <label>Coordenadas (GPS)</label>
+            <p class="hint">Apretá el botón para cargar tu ubicación actual con el GPS del celular.</p>
+            <div class="map-actions">
+              <button type="button" id="updUseGpsBtn" class="btn-secondary">📍 Usar mi ubicación</button>
+              <button type="button" id="updClearCoordsBtn" class="btn-secondary">Borrar coordenadas</button>
+            </div>
+            <div id="updCoordsReadout" class="coords-readout empty">Sin coordenadas cargadas todavía.</div>
+          </div>
+          <div id="updFotoEnsayoBlock" class="sub-block hidden">
+            <label for="updFotoEnsayo">Foto de ensayo (nueva ubicación)</label>
+            <div class="file-input">
+              <input type="file" id="updFotoEnsayo" accept="image/*,application/pdf" capture="environment">
+            </div>
+            <p class="hint">Como es un pozo, subí la foto o PDF del ensayo en el nuevo lugar (se guarda como PDF).</p>
+          </div>
+
+          <div class="field" style="margin-top:14px;">
+            <label for="updEstadoServicio">Actualizar Estado para el servicio</label>
+            <div class="select-wrap">
+              <select id="updEstadoServicio">
+                <option value="" disabled selected>Elegir estado</option>
+                <option>Apto para servicio</option>
+                <option>Apto con observaciones</option>
+                <option>No apto para servicio</option>
+                <option>Venta</option>
+                <option>En uso</option>
+              </select>
+            </div>
+            <p class="hint">Los dos campos (ubicación y estado) son obligatorios juntos para poder actualizar.</p>
+          </div>
+
+          <button type="button" id="updSubmitBtn" class="submit-btn" style="margin-top:12px;">Actualizar ubicación y estado</button>
+          <div id="updStatusMsg" class="status-msg"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ VISTA: CALCULADORA ============ -->
+    <div id="view-calculadora" class="view">
+      <div class="card">
+        <p class="hint" style="margin-top:0;">Herramienta independiente — no comparte datos con Cargar Ensayo ni Consultar Trafo.</p>
+        <iframe class="tool-frame" src="resistencia_devanados.html" title="Calcular Resistencia de Devanados"></iframe>
+      </div>
+    </div>
+  </main>
+
+<script>
+  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxImcmYq6K5LUNYkoZrloiyHgVnCKkIvKNsqz1s_wTa1UFuLLnkpyc51miPYRUcFz3LXQ/exec";
+
+  function fechaDDMMAAAA(d){
+    d = d || new Date();
+    const dd = String(d.getDate()).padStart(2,'0');
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const yyyy = d.getFullYear();
+    return `${dd}-${mm}-${yyyy}`;
+  }
+
+  // ---------- INSTALAR (PWA) Y SERVICE WORKER ----------
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+    });
+  }
+
+  // ---------- COLA OFFLINE ----------
+  const QUEUE_KEY = 'ensayoTrafosPendientes';
+  function getQueue(){ try{ return JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); } catch(e){ return []; } }
+  function setQueue(q){ localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); updateConnBanner(); }
+  function addToQueue(item){ const q = getQueue(); q.push(item); setQueue(q); }
+
+  const connBanner = document.getElementById('connBanner');
+  function updateConnBanner(){
+    const pendientes = getQueue().length;
+    if (!navigator.onLine){
+      connBanner.className = 'conn-banner offline';
+      connBanner.textContent = pendientes > 0
+        ? `📵 Sin conexión — ${pendientes} registro(s) guardados localmente`
+        : '📵 Sin conexión — los registros se guardan localmente';
+    } else if (pendientes > 0){
+      connBanner.className = 'conn-banner pending';
+      connBanner.textContent = `🔄 Enviando ${pendientes} registro(s) pendiente(s)...`;
+    } else {
+      connBanner.className = 'conn-banner';
+      connBanner.textContent = '';
+    }
+  }
+
+  async function enviarAppsScript(payload){
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+    return true;
+  }
+
+  async function flushQueue(){
+    if (!navigator.onLine) return;
+    let q = getQueue();
+    if (q.length === 0) return;
+    updateConnBanner();
+    const restantes = [];
+    for (const item of q){
+      try{ await enviarAppsScript(item); }
+      catch(e){ restantes.push(item); }
+    }
+    setQueue(restantes);
+    if (restantes.length === 0){
+      connBanner.className = 'conn-banner synced';
+      connBanner.textContent = '✅ Todo sincronizado';
+      setTimeout(updateConnBanner, 3000);
+    }
+  }
+
+  async function enviarAppsScriptConCola(payload){
+    if (!navigator.onLine){ addToQueue(payload); return; }
+    try{ await enviarAppsScript(payload); }
+    catch(e){ addToQueue(payload); }
+  }
+
+  window.addEventListener('online', flushQueue);
+  window.addEventListener('offline', updateConnBanner);
+  setInterval(flushQueue, 20000);
+  updateConnBanner();
+  flushQueue();
+
+  // ---------- TABS ----------
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('view-' + btn.dataset.view).classList.add('active');
+    });
+  });
+
+  // ---------- "OTRO" TOGGLES ----------
+  function wireOtro(selectId, blockId){
+    const sel = document.getElementById(selectId);
+    const block = document.getElementById(blockId);
+    sel.addEventListener('change', ()=>{ block.classList.toggle('hidden', sel.value !== 'Otro'); });
+  }
+  wireOtro('marca','marcaOtroBlock');
+  wireOtro('potencia','potenciaOtroBlock');
+  wireOtro('tensionP','tensionPOtroBlock');
+  wireOtro('tensionS','tensionSOtroBlock');
+
+  function valorConOtro(selectId, otroId){
+    const sel = document.getElementById(selectId);
+    if (sel.value === 'Otro'){
+      const otro = document.getElementById(otroId).value.trim();
+      return otro ? otro : 'Otro';
+    }
+    return sel.value;
+  }
+
+  function badgeClassFor(estado){
+    if (estado === 'Apto para servicio') return 'apto';
+    if (estado === 'Apto con observaciones') return 'obs';
+    if (estado === 'Venta') return 'venta';
+    if (estado === 'En uso') return 'en-uso';
+    return 'no-apto';
+  }
+
+  // ---------- UBICACIÓN + COORDENADAS GPS (Cargar Ensayo) ----------
+  const ubicacionSelect = document.getElementById('ubicacion');
+  const pozoBlock = document.getElementById('pozoBlock');
+  const pozoDetalle = document.getElementById('pozoDetalle');
+  const coordsBlock = document.getElementById('coordsBlock');
+  const coordsReadout = document.getElementById('coordsReadout');
+  let currentCoords = null;
+
+  function renderCoords(){
+    if (!currentCoords){
+      coordsReadout.classList.add('empty');
+      coordsReadout.innerHTML = "Sin coordenadas cargadas todavía.";
+      return;
+    }
+    coordsReadout.classList.remove('empty');
+    const lat = currentCoords.lat.toFixed(6), lng = currentCoords.lng.toFixed(6);
+    const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+    coordsReadout.innerHTML = `<strong>Lat:</strong> ${lat} &nbsp; <strong>Lng:</strong> ${lng}<br><a class="maps-link" href="${mapsUrl}" target="_blank" rel="noopener">Ver en Google Maps ↗</a>`;
+  }
+
+  document.getElementById('useGpsBtn').addEventListener('click', ()=>{
+    if (!navigator.geolocation){ alert('Tu navegador no soporta geolocalización.'); return; }
+    navigator.geolocation.getCurrentPosition(
+      pos => { currentCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude }; renderCoords(); },
+      err => alert('No se pudo obtener tu ubicación: ' + err.message),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  });
+
+  document.getElementById('clearCoordsBtn').addEventListener('click', ()=>{
+    currentCoords = null;
+    renderCoords();
+  });
+
+  const estadoServicio = document.getElementById('estadoServicio');
+
+  ubicacionSelect.addEventListener('change', ()=>{
+    const val = ubicacionSelect.value;
+    pozoBlock.classList.toggle('hidden', val !== 'POZO');
+    pozoDetalle.required = (val === 'POZO');
+    if (val !== 'POZO') pozoDetalle.value = '';
+    coordsBlock.classList.toggle('hidden', val !== 'PREDIO TRAFOS CD');
+
+    if (val === 'POZO' && estadoVisual.value !== 'Requiere reparación'){
+      estadoServicio.value = 'En uso';
+    }
+  });
+
+  // ---------- FOTOS OBLIGATORIAS ----------
+  const fotoPlaca = document.getElementById('fotoPlaca');
+  const fotoEnsayo = document.getElementById('fotoEnsayo');
+  const fotoPlacaLabel = document.getElementById('fotoPlacaLabel');
+  const fotoEnsayoLabel = document.getElementById('fotoEnsayoLabel');
+
+  function actualizarLabelsFotos(){
+    const requiereReparacion = estadoVisual.value === 'Requiere reparación';
+    const obligatorio = estadoServicio.value === 'Apto para servicio' || requiereReparacion;
+    fotoPlacaLabel.innerHTML = 'Foto de placa' + (obligatorio ? ' <span class="required-mark">*</span>' : '');
+    const textoFotoEnsayo = requiereReparacion ? 'Foto de la anomalía del transformador' : 'Foto de ensayo';
+    fotoEnsayoLabel.innerHTML = textoFotoEnsayo + (obligatorio ? ' <span class="required-mark">*</span>' : '');
+  }
+  estadoServicio.addEventListener('change', actualizarLabelsFotos);
+
+  // ---------- ESTADO VISUAL DEL TRANSFORMADOR ----------
+  const estadoVisual = document.getElementById('estadoVisual');
+  const estadoVisualHint = document.getElementById('estadoVisualHint');
+  const camposEnsayoCard = document.getElementById('camposEnsayoCard');
+  const camposEnsayoInputs = camposEnsayoCard.querySelectorAll('select, input');
+  const comentariosField = document.getElementById('comentarios');
+
+  estadoVisual.addEventListener('change', ()=>{
+    const requiereReparacion = estadoVisual.value === 'Requiere reparación';
+
+    if (requiereReparacion){
+      camposEnsayoCard.classList.add('hidden');
+      camposEnsayoInputs.forEach(el => { el.required = false; el.value = ''; });
+      estadoServicio.value = 'No apto para servicio';
+      estadoServicio.disabled = true;
+      comentariosField.placeholder = 'Describí la anomalía / motivo de la reparación';
+      estadoVisualHint.textContent = 'Como requiere reparación, el trafo queda marcado "No apto para servicio". Completá observaciones y adjuntá las fotos.';
+    } else {
+      camposEnsayoCard.classList.remove('hidden');
+      camposEnsayoInputs.forEach(el => { el.required = true; });
+      estadoServicio.disabled = false;
+      if (estadoServicio.value === 'No apto para servicio') estadoServicio.value = '';
+      if (ubicacionSelect.value === 'POZO') estadoServicio.value = 'En uso';
+      comentariosField.placeholder = '';
+      estadoVisualHint.textContent = '';
+    }
+    actualizarLabelsFotos();
+  });
+
+  function fileToBase64(file){
+    return new Promise((resolve, reject)=>{
+      if (!file){ resolve(null); return; }
+      const reader = new FileReader();
+      reader.onload = () => resolve({ name: file.name, mimeType: file.type, base64: reader.result.split(',')[1] });
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // ---------- LOOKUP AL ESCRIBIR N° DE SERIE ----------
+  const serieInput = document.getElementById('serie');
+  const lookupBanner = document.getElementById('lookupBanner');
+
+  serieInput.addEventListener('blur', async ()=>{
+    const serie = serieInput.value.trim();
+    lookupBanner.className = 'lookup-banner';
+    lookupBanner.innerHTML = '';
+    if (!serie) return;
+    try{
+      const res = await fetch(`${APPS_SCRIPT_URL}?serie=${encodeURIComponent(serie)}`);
+      const data = await res.json();
+      if (data.found){
+        lookupBanner.className = 'lookup-banner found';
+        lookupBanner.innerHTML = `⚠️ Este trafo ya está cargado.<br><strong>Último estado:</strong> ${data.estadoServicio || '-'}<br><strong>Última ubicación:</strong> ${data.ubicacion || '-'}<br><strong>Último ensayo:</strong> ${data.fecha || '-'}<br>Vas a agregar un nuevo ensayo para este mismo trafo.`;
+      } else {
+        lookupBanner.className = 'lookup-banner new';
+        lookupBanner.innerHTML = `✅ N° de serie nuevo, se va a crear un registro.`;
+      }
+    }catch(e){ /* sin conexión: no bloqueamos la carga */ }
+  });
+
+  // ---------- ENVÍO DEL FORMULARIO ----------
+  const form = document.getElementById('ensayoForm');
+  const submitBtn = document.getElementById('submitBtn');
+  const statusMsg = document.getElementById('statusMsg');
+
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    statusMsg.className = 'status-msg';
+    statusMsg.textContent = '';
+
+    const ubic = ubicacionSelect.value;
+    if (ubic === 'POZO' && !pozoDetalle.value.trim()){
+      statusMsg.className = 'status-msg err';
+      statusMsg.textContent = 'Escribí el detalle del pozo.';
+      return;
+    }
+
+    const requiereReparacion = estadoVisual.value === 'Requiere reparación';
+
+    const ensayosRealizados = [];
+    if (document.getElementById('ensayoAislacion').checked) ensayosRealizados.push('Medición de aislación');
+    if (document.getElementById('ensayoResistencia').checked) ensayosRealizados.push('Medición de resistencia de devanados');
+    if (!requiereReparacion && ensayosRealizados.length === 0){
+      statusMsg.className = 'status-msg err';
+      statusMsg.textContent = 'Marcá al menos un ensayo realizado.';
+      return;
+    }
+
+    if (requiereReparacion && !comentariosField.value.trim()){
+      statusMsg.className = 'status-msg err';
+      statusMsg.textContent = 'Completá el campo de Comentarios describiendo la anomalía.';
+      return;
+    }
+
+    const fotosObligatorias = requiereReparacion || estadoServicio.value === 'Apto para servicio';
+    if (fotosObligatorias && (!fotoPlaca.files[0] || !fotoEnsayo.files[0])){
+      statusMsg.className = 'status-msg err';
+      statusMsg.textContent = requiereReparacion
+        ? 'Como el estado visual es "Requiere reparación", las fotos de placa y de la anomalía son obligatorias.'
+        : 'Si el estado es "Apto para servicio", las fotos de placa y de ensayo son obligatorias.';
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Guardando...';
+
+    try{
+      const fotoPlacaData = await fileToBase64(fotoPlaca.files[0]);
+      const fotoEnsayoData = await fileToBase64(fotoEnsayo.files[0]);
+
+      const ubicacionFinal = ubic === 'POZO' ? pozoDetalle.value.trim() : ubic;
+
+      const payload = {
+        serie: serieInput.value.trim(),
+        ubicacion: ubicacionFinal,
+        esPozo: ubic === 'POZO',
+        lat: currentCoords ? currentCoords.lat : '',
+        lng: currentCoords ? currentCoords.lng : '',
+        marca: valorConOtro('marca','marcaOtro'),
+        tipo: document.getElementById('tipo').value,
+        potencia: valorConOtro('potencia','potenciaOtro'),
+        tensionP: valorConOtro('tensionP','tensionPOtro'),
+        tensionS: valorConOtro('tensionS','tensionSOtro'),
+        estadoVisual: estadoVisual.value,
+        ensayosRealizados: ensayosRealizados.join(' + '),
+        indicePolarizacion: document.getElementById('indicePolarizacion').value,
+        relacionAbsorcion: document.getElementById('relacionAbsorcion').value,
+        desviacionResistencia: document.getElementById('desviacionResistencia').value,
+        estadoConmutador: document.getElementById('estadoConmutador').value,
+        estadoServicio: estadoServicio.value,
+        comentarios: comentariosField.value,
+        fotoPlaca: fotoPlacaData,
+        fotoEnsayo: fotoEnsayoData,
+        timestamp: fechaDDMMAAAA()
+      };
+
+      await enviarAppsScriptConCola(payload);
+
+      statusMsg.className = 'status-msg ok';
+      statusMsg.textContent = navigator.onLine
+        ? 'Ensayo guardado correctamente.'
+        : 'Sin conexión: el ensayo quedó guardado en el celular y se va a enviar solo cuando vuelva la señal.';
+      form.reset();
+      pozoBlock.classList.add('hidden');
+      coordsBlock.classList.add('hidden');
+      document.getElementById('marcaOtroBlock').classList.add('hidden');
+      document.getElementById('potenciaOtroBlock').classList.add('hidden');
+      document.getElementById('tensionPOtroBlock').classList.add('hidden');
+      document.getElementById('tensionSOtroBlock').classList.add('hidden');
+      currentCoords = null;
+      lookupBanner.className = 'lookup-banner';
+      camposEnsayoCard.classList.remove('hidden');
+      camposEnsayoInputs.forEach(el => { el.required = true; });
+      estadoServicio.disabled = false;
+      comentariosField.placeholder = '';
+      estadoVisualHint.textContent = '';
+      actualizarLabelsFotos();
+    }catch(err){
+      statusMsg.className = 'status-msg err';
+      statusMsg.textContent = 'Error al guardar. Verificá tu conexión e intentá de nuevo.';
+    }finally{
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Guardar ensayo';
+    }
+  });
+
+  // ---------- VISTA CONSULTAR ----------
+  const searchBtn = document.getElementById('searchBtn');
+  const searchSerie = document.getElementById('searchSerie');
+  const searchStatus = document.getElementById('searchStatus');
+  const resultCard = document.getElementById('resultCard');
+  const listResults = document.getElementById('listResults');
+  let ultimoResultado = null;
+
+  function mostrarResultado(serie, data){
+    ultimoResultado = data;
+    listResults.innerHTML = '';
+    document.getElementById('resultSerie').textContent = serie;
+    const badge = document.getElementById('resultBadge');
+    badge.textContent = data.estadoServicio || '-';
+    badge.className = 'badge ' + badgeClassFor(data.estadoServicio);
+    document.getElementById('resMarca').textContent = data.marca || '-';
+    document.getElementById('resTipo').textContent = data.tipo || '-';
+    document.getElementById('resPotencia').textContent = data.potencia || '-';
+    document.getElementById('resTensionP').textContent = data.tensionP || '-';
+    document.getElementById('resTensionS').textContent = data.tensionS || '-';
+    document.getElementById('resEstadoVisual').textContent = data.estadoVisual || '-';
+    document.getElementById('resUbicacion').textContent = data.ubicacion || '-';
+    if (data.lat && data.lng){
+      document.getElementById('resCoords').innerHTML = `<a class="maps-link" href="https://www.google.com/maps?q=${data.lat},${data.lng}" target="_blank">Ver en Maps ↗</a>`;
+    } else {
+      document.getElementById('resCoords').textContent = '-';
+    }
+    document.getElementById('resFecha').textContent = data.fecha || '-';
+    document.getElementById('resFotoPlaca').innerHTML = data.fotoPlaca ? `<a class="maps-link" href="${data.fotoPlaca}" target="_blank">Ver foto ↗</a>` : '-';
+    document.getElementById('resFotoEnsayo').innerHTML = data.fotoEnsayo ? `<a class="maps-link" href="${data.fotoEnsayo}" target="_blank">Ver PDF ↗</a>` : '-';
+
+    resultCard.style.display = 'block';
+
+    updUbicacion.value = '';
+    updPozoBlock.classList.add('hidden');
+    updCoordsBlock.classList.add('hidden');
+    updFotoEnsayoBlock.classList.add('hidden');
+    updPozoLockRow.classList.add('hidden');
+    updPozoDetalle.readOnly = false;
+    updEstadoServicio.value = '';
+    updCurrentCoords = null;
+    renderUpdCoords();
+    updStatusMsg.className = 'status-msg';
+    updStatusMsg.textContent = '';
+    fichaStatus.className = 'status-msg';
+    fichaStatus.textContent = '';
+
+    resultCard.dataset.serie = serie;
+  }
+
+  searchBtn.addEventListener('click', async ()=>{
+    const serie = searchSerie.value.trim();
+    searchStatus.className = 'status-msg';
+    resultCard.style.display = 'none';
+    listResults.innerHTML = '';
+    if (!serie) return;
+    searchBtn.disabled = true;
+    searchBtn.textContent = '...';
+    try{
+      const res = await fetch(`${APPS_SCRIPT_URL}?serie=${encodeURIComponent(serie)}`);
+      const data = await res.json();
+      if (!data.found){
+        searchStatus.className = 'status-msg warn';
+        searchStatus.textContent = 'No se encontró ningún trafo con ese N° de serie.';
+        return;
+      }
+      mostrarResultado(serie, data);
+    }catch(e){
+      searchStatus.className = 'status-msg err';
+      searchStatus.textContent = 'Error al consultar. Verificá tu conexión.';
+    }finally{
+      searchBtn.disabled = false;
+      searchBtn.textContent = 'Buscar';
+    }
+  });
+
+  // ---------- FILTRAR POR ESTADO ----------
+  const searchEstado = document.getElementById('searchEstado');
+  const searchEstadoBtn = document.getElementById('searchEstadoBtn');
+
+  searchEstadoBtn.addEventListener('click', async ()=>{
+    const estado = searchEstado.value;
+    searchStatus.className = 'status-msg';
+    resultCard.style.display = 'none';
+    listResults.innerHTML = '';
+    if (!estado){
+      searchStatus.className = 'status-msg err';
+      searchStatus.textContent = 'Elegí un estado para filtrar.';
+      return;
+    }
+    searchEstadoBtn.disabled = true;
+    searchEstadoBtn.textContent = '...';
+    try{
+      const res = await fetch(`${APPS_SCRIPT_URL}?estado=${encodeURIComponent(estado)}`);
+      const data = await res.json();
+      const items = data.results || [];
+      if (items.length === 0){
+        searchStatus.className = 'status-msg warn';
+        searchStatus.textContent = `No hay trafos con estado "${estado}".`;
+        return;
+      }
+      searchStatus.className = 'status-msg ok';
+      searchStatus.textContent = `${items.length} trafo(s) encontrados.`;
+      items.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'list-result';
+        row.innerHTML = `
+          <div class="top-row">
+            <span class="serie">${item.serie}</span>
+            <span class="badge ${badgeClassFor(item.estadoServicio)}">${item.estadoServicio || '-'}</span>
+          </div>
+          <div class="detail">
+            ${item.tipo || '-'} · ${item.marca || '-'} · ${item.potencia || '-'}<br>
+            ${item.tensionP || '-'} / ${item.tensionS || '-'}<br>
+            📍 ${item.ubicacion || '-'}
+          </div>`;
+        row.addEventListener('click', () => {
+          mostrarResultado(item.serie, item);
+          window.scrollTo({ top: resultCard.offsetTop - 20, behavior: 'smooth' });
+        });
+        listResults.appendChild(row);
+      });
+    }catch(e){
+      searchStatus.className = 'status-msg err';
+      searchStatus.textContent = 'Error al consultar. Verificá tu conexión.';
+    }finally{
+      searchEstadoBtn.disabled = false;
+      searchEstadoBtn.textContent = 'Filtrar';
+    }
+  });
+
+  // ---------- FICHA PDF INDIVIDUAL ----------
+  const fichaBtn = document.getElementById('fichaBtn');
+  const fichaStatus = document.getElementById('fichaStatus');
+
+  fichaBtn.addEventListener('click', async ()=>{
+    const serie = resultCard.dataset.serie;
+    fichaStatus.className = 'status-msg';
+    fichaStatus.textContent = '';
+    if (!serie) return;
+    if (!navigator.onLine){
+      fichaStatus.className = 'status-msg err';
+      fichaStatus.textContent = 'Necesitás conexión a internet para generar la ficha.';
+      return;
+    }
+    fichaBtn.disabled = true;
+    fichaBtn.textContent = 'Generando ficha...';
+    try{
+      const res = await fetch(`${APPS_SCRIPT_URL}?ficha=1&serie=${encodeURIComponent(serie)}`);
+      const data = await res.json();
+      if (!data.ok){
+        fichaStatus.className = 'status-msg err';
+        fichaStatus.textContent = 'No se pudo generar la ficha para este trafo.';
+        return;
+      }
+      const byteChars = atob(data.base64);
+      const byteNumbers = new Array(byteChars.length);
+      for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    }catch(e){
+      fichaStatus.className = 'status-msg err';
+      fichaStatus.textContent = 'Error al generar la ficha. Intentá de nuevo.';
+    }finally{
+      fichaBtn.disabled = false;
+      fichaBtn.textContent = '📄 Ver ficha del ensayo (PDF)';
+    }
+  });
+
+  // ---------- DESCARGAR PLANILLA ----------
+  const downloadBtn = document.getElementById('downloadBtn');
+  const downloadStatus = document.getElementById('downloadStatus');
+
+  downloadBtn.addEventListener('click', async ()=>{
+    downloadStatus.className = 'status-msg';
+    downloadStatus.textContent = '';
+    if (!navigator.onLine){
+      downloadStatus.className = 'status-msg err';
+      downloadStatus.textContent = 'Necesitás conexión a internet para descargar la planilla.';
+      return;
+    }
+    downloadBtn.disabled = true;
+    downloadBtn.textContent = 'Generando...';
+    try{
+      const res = await fetch(`${APPS_SCRIPT_URL}?export=maestro`);
+      const csvText = await res.text();
+      const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ensayos_trafos_${fechaDDMMAAAA()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }catch(e){
+      downloadStatus.className = 'status-msg err';
+      downloadStatus.textContent = 'No se pudo descargar la planilla. Intentá de nuevo.';
+    }finally{
+      downloadBtn.disabled = false;
+      downloadBtn.textContent = '📥 Descargar planilla de ensayos (CSV)';
+    }
+  });
+
+  // ---------- ACTUALIZAR UBICACIÓN + ESTADO ----------
+  const updUbicacion = document.getElementById('updUbicacion');
+  const updPozoBlock = document.getElementById('updPozoBlock');
+  const updPozoDetalle = document.getElementById('updPozoDetalle');
+  const updPozoLockRow = document.getElementById('updPozoLockRow');
+  const updPozoUnlockBtn = document.getElementById('updPozoUnlockBtn');
+  const updCoordsBlock = document.getElementById('updCoordsBlock');
+  const updCoordsReadout = document.getElementById('updCoordsReadout');
+  const updFotoEnsayoBlock = document.getElementById('updFotoEnsayoBlock');
+  const updFotoEnsayo = document.getElementById('updFotoEnsayo');
+  const updEstadoServicio = document.getElementById('updEstadoServicio');
+  const updSubmitBtn = document.getElementById('updSubmitBtn');
+  const updStatusMsg = document.getElementById('updStatusMsg');
+  let updCurrentCoords = null;
+
+  function renderUpdCoords(){
+    if (!updCurrentCoords){
+      updCoordsReadout.classList.add('empty');
+      updCoordsReadout.innerHTML = "Sin coordenadas cargadas todavía.";
+      return;
+    }
+    updCoordsReadout.classList.remove('empty');
+    const lat = updCurrentCoords.lat.toFixed(6), lng = updCurrentCoords.lng.toFixed(6);
+    const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+    updCoordsReadout.innerHTML = `<strong>Lat:</strong> ${lat} &nbsp; <strong>Lng:</strong> ${lng}<br><a class="maps-link" href="${mapsUrl}" target="_blank" rel="noopener">Ver en Google Maps ↗</a>`;
+  }
+
+  document.getElementById('updUseGpsBtn').addEventListener('click', ()=>{
+    if (!navigator.geolocation){ alert('Tu navegador no soporta geolocalización.'); return; }
+    navigator.geolocation.getCurrentPosition(
+      pos => { updCurrentCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude }; renderUpdCoords(); },
+      err => alert('No se pudo obtener tu ubicación: ' + err.message),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  });
+
+  document.getElementById('updClearCoordsBtn').addEventListener('click', ()=>{
+    updCurrentCoords = null;
+    renderUpdCoords();
+  });
+
+  updPozoUnlockBtn.addEventListener('click', ()=>{
+    updPozoDetalle.readOnly = false;
+    updPozoDetalle.focus();
+    updPozoLockRow.classList.add('hidden');
+  });
+
+  updUbicacion.addEventListener('change', ()=>{
+    const val = updUbicacion.value;
+    updPozoBlock.classList.toggle('hidden', val !== 'POZO');
+    updCoordsBlock.classList.toggle('hidden', val !== 'PREDIO TRAFOS CD');
+    updFotoEnsayoBlock.classList.toggle('hidden', val !== 'POZO');
+
+    if (val === 'POZO'){
+      // Mejora 7: si el trafo YA estaba en un pozo, protegemos su identificación
+      if (ultimoResultado && ultimoResultado.esPozo){
+        updPozoDetalle.value = ultimoResultado.ubicacion || '';
+        updPozoDetalle.readOnly = true;
+        updPozoLockRow.classList.remove('hidden');
+      } else {
+        updPozoDetalle.value = '';
+        updPozoDetalle.readOnly = false;
+        updPozoLockRow.classList.add('hidden');
+      }
+    } else {
+      updPozoDetalle.value = '';
+      updPozoLockRow.classList.add('hidden');
+    }
+  });
+
+  updSubmitBtn.addEventListener('click', async ()=>{
+    updStatusMsg.className = 'status-msg';
+    updStatusMsg.textContent = '';
+
+    const serie = resultCard.dataset.serie || searchSerie.value.trim();
+    const val = updUbicacion.value;
+    const nuevoEstado = updEstadoServicio.value;
+
+    if (!serie){ return; }
+    if (!val || !nuevoEstado){
+      updStatusMsg.className = 'status-msg err';
+      updStatusMsg.textContent = 'Elegí tanto la nueva ubicación como el nuevo Estado para el servicio — los dos son obligatorios juntos.';
+      return;
+    }
+    if (val === 'POZO' && !updPozoDetalle.value.trim()){
+      updStatusMsg.className = 'status-msg err';
+      updStatusMsg.textContent = 'Escribí la identificación del pozo.';
+      return;
+    }
+
+    updSubmitBtn.disabled = true;
+    updSubmitBtn.textContent = 'Actualizando...';
+
+    try{
+      const updFotoData = (val === 'POZO') ? await fileToBase64(updFotoEnsayo.files[0]) : null;
+      const ubicacionFinal = val === 'POZO' ? updPozoDetalle.value.trim() : val;
+
+      await enviarAppsScriptConCola({
+        action: 'updateLocation',
+        serie: serie,
+        ubicacion: ubicacionFinal,
+        esPozo: val === 'POZO',
+        estadoServicio: nuevoEstado,
+        lat: updCurrentCoords ? updCurrentCoords.lat : '',
+        lng: updCurrentCoords ? updCurrentCoords.lng : '',
+        fotoEnsayo: updFotoData,
+        timestamp: fechaDDMMAAAA()
+      });
+
+      updStatusMsg.className = 'status-msg ok';
+      updStatusMsg.textContent = navigator.onLine
+        ? 'Ubicación y estado actualizados correctamente.'
+        : 'Sin conexión: la actualización quedó guardada y se va a enviar sola apenas vuelva la señal.';
+
+      document.getElementById('resUbicacion').textContent = ubicacionFinal;
+      const badge = document.getElementById('resultBadge');
+      badge.textContent = nuevoEstado;
+      badge.className = 'badge ' + badgeClassFor(nuevoEstado);
+      if (updCurrentCoords){
+        document.getElementById('resCoords').innerHTML = `<a class="maps-link" href="https://www.google.com/maps?q=${updCurrentCoords.lat},${updCurrentCoords.lng}" target="_blank">Ver en Maps ↗</a>`;
+      }
+      if (ultimoResultado){
+        ultimoResultado.ubicacion = ubicacionFinal;
+        ultimoResultado.esPozo = val === 'POZO';
+        ultimoResultado.estadoServicio = nuevoEstado;
+      }
+    }catch(err){
+      updStatusMsg.className = 'status-msg err';
+      updStatusMsg.textContent = 'Error al actualizar. Verificá tu conexión e intentá de nuevo.';
+    }finally{
+      updSubmitBtn.disabled = false;
+      updSubmitBtn.textContent = 'Actualizar ubicación y estado';
+    }
+  });
+</script>
+</body>
+</html>

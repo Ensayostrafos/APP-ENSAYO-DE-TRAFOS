@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#f5f7fa">
+<title>Resistencia de Devanados (Electropatagonia)</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap');
+:root{--bg:#f5f7fa;--bg2:#ffffff;--bg3:#f0f2f5;--border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.14);--text:#1a1a1a;--muted:#555f6e;--dim:#9aa3ae;--green:#1a7a5e;--green2:#155f49;--red:#c0392b;--amber:#c47a00;--radius:14px;--radius-sm:8px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;padding-bottom:60px}
+header{background:var(--bg2);border-bottom:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.06);padding:16px 20px;position:sticky;top:0;z-index:10}
+.logo-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.logo-left{display:flex;align-items:center;gap:10px}
+.logo-icon{width:34px;height:34px;background:var(--green);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-icon svg{width:18px;height:18px}
+.logo-text{font-size:15px;font-weight:800;letter-spacing:-.3px}
+.logo-text span{color:var(--green)}
+main{padding:16px;max-width:600px;margin:0 auto}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.card-title{font-size:10px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;font-family:'DM Mono',monospace;display:flex;align-items:center;gap:8px}
+.card-title::before{content:'';display:block;width:3px;height:13px;background:var(--green);border-radius:2px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.info-field{display:flex;flex-direction:column;gap:5px}
+.info-label{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+input[type=number]{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-family:'DM Mono',monospace;font-size:16px;padding:9px 10px;outline:none;-webkit-appearance:none}
+input[type=number]:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(26,122,94,.15)}
+input::placeholder{color:var(--dim);font-size:12px}
+input::-webkit-inner-spin-button,input::-webkit-outer-spin-button{-webkit-appearance:none}
+select{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-family:'DM Mono',monospace;font-size:16px;padding:9px 28px 9px 10px;outline:none;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23555f6e' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;cursor:pointer}
+select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(26,122,94,.15)}
+.tipo-selector{display:flex;gap:8px}
+.tipo-btn{flex:1;padding:10px 6px;border-radius:var(--radius-sm);border:1.5px solid var(--border2);background:var(--bg3);color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s;line-height:1.4}
+.tipo-btn.active{background:var(--green);border-color:var(--green);color:#fff}
+.tipo-btn:active{transform:scale(.97)}
+.winding-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+.winding-header{padding:14px 16px 0}
+.winding-title{font-size:10px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:.1em;font-family:'DM Mono',monospace;display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.winding-title::before{content:'';display:block;width:3px;height:13px;background:var(--green);border-radius:2px}
+.tap-tabs{display:flex;gap:5px;overflow-x:auto;padding:0 16px 12px;scrollbar-width:none}
+.tap-tabs::-webkit-scrollbar{display:none}
+.tap-btn{flex-shrink:0;width:34px;height:30px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--muted);font-family:'DM Mono',monospace;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;position:relative}
+.tap-btn:active{transform:scale(.95)}
+.tap-btn.active{background:var(--green);border-color:var(--green);color:#fff;font-weight:700}
+.tap-btn.has-data::after{content:'';position:absolute;top:3px;right:3px;width:5px;height:5px;border-radius:50%;background:var(--amber)}
+.tap-btn.active.has-data::after{background:rgba(255,255,255,.6)}
+.tap-panel{padding:0 16px 16px;display:none}
+.tap-panel.active{display:block}
+.phase-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.phase-field{display:flex;flex-direction:column;gap:5px}
+.phase-label{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;display:flex;align-items:center;gap:4px}
+.phase-dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}
+.dot-r{background:var(--red)}.dot-s{background:var(--amber)}.dot-t{background:var(--green)}
+.unit-hint{font-size:10px;color:var(--dim);font-family:'DM Mono',monospace;margin-top:6px}
+.hexa-bobina-card{background:#f0f9f6;border:1px solid #a8ddd0;border-radius:var(--radius);padding:0 0 4px;margin-bottom:12px;overflow:hidden}
+.hexa-bobina-header{padding:14px 16px 0}
+.hexa-bobina-title{font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.1em;font-family:'DM Mono',monospace;display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.hexa-bobina-title::before{content:'';display:block;width:3px;height:13px;background:var(--green);border-radius:2px}
+.btn-row{display:flex;gap:10px;margin-top:4px}
+.btn-calc{flex:1;background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'Syne',sans-serif;font-size:15px;font-weight:700;padding:14px;cursor:pointer;transition:background .15s,transform .1s}
+.btn-calc:active{background:var(--green2);transform:scale(.98)}
+.btn-clear{background:transparent;color:var(--muted);border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'Syne',sans-serif;font-size:14px;padding:14px 18px;cursor:pointer}
+.btn-clear:active{background:var(--bg3)}
+.error-msg{display:none;background:rgba(192,57,43,.1);border:1px solid rgba(192,57,43,.3);border-radius:var(--radius-sm);color:var(--red);font-size:13px;padding:10px 12px;margin-top:10px;font-family:'DM Mono',monospace}
+.corriente-box{background:#eaf7f3;border:1px solid #a8ddd0;border-radius:var(--radius-sm);padding:12px 14px;margin-top:12px;display:none}
+.corr-title{font-size:10px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:.08em;font-family:'DM Mono',monospace;margin-bottom:10px}
+.corriente-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.corriente-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.corriente-item{display:flex;flex-direction:column;gap:3px}
+.corriente-label{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace}
+.corriente-val{font-size:16px;font-weight:700;color:var(--green);font-family:'DM Mono',monospace}
+.corriente-sub{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace}
+.conm-badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 10px;border-radius:6px;font-family:'DM Mono',monospace;margin-top:8px}
+.badge-normal{background:#eaf7f3;color:var(--green);border:1px solid #a8ddd0}
+.badge-dudoso{background:#fff8eb;color:var(--amber);border:1px solid #f5d48a}
+.badge-malo{background:#fdf0ef;color:var(--red);border:1px solid #e8b0ac}
+.result-section{display:none;margin-top:4px}
+.verdict-card{border-radius:var(--radius);padding:18px;margin-bottom:12px}
+.v-ok{background:#eaf7f3;border:1px solid #a8ddd0}
+.v-fail{background:#fdf0ef;border:1px solid #e8b0ac}
+.verdict-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.verdict-label{font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px}
+.verdict-main{font-size:20px;font-weight:800;line-height:1.15}
+.v-ok .verdict-main{color:var(--green)}
+.v-fail .verdict-main{color:var(--red)}
+.verdict-icon{font-size:32px;line-height:1}
+.verdict-desc{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5}
+.metrics-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.metric-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 8px;text-align:center}
+.metric-lbl{font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:4px;line-height:1.3}
+.metric-val{font-size:17px;font-weight:700;font-family:'DM Mono',monospace}
+.results-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:12px}
+.results-card-header{padding:14px 16px 10px;font-size:10px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:.1em;font-family:'DM Mono',monospace;display:flex;align-items:center;gap:8px}
+.results-card-header::before{content:'';display:block;width:3px;height:13px;background:var(--green);border-radius:2px}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-family:'DM Mono',monospace;font-size:11px}
+thead tr{background:var(--bg3)}
+th{padding:8px 10px;text-align:left;color:var(--muted);font-weight:500;white-space:nowrap;font-size:10px;letter-spacing:.03em}
+td{padding:8px 10px;border-top:1px solid var(--border);color:var(--text);white-space:nowrap}
+td:first-child{color:var(--muted);font-weight:500}
+.td-pct{font-weight:700}
+tr.row-fail td{background:#fdf5f4}
+.bars-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.bar-row{margin-bottom:12px}
+.bar-row:last-child{margin-bottom:0}
+.bar-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.bar-name{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+.bar-pct{font-size:13px;font-weight:700;font-family:'DM Mono',monospace}
+.bar-track{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.range-guide{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap}
+.range-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace}
+.range-dot{width:7px;height:7px;border-radius:50%}
+.norma-box{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--green);border-radius:var(--radius-sm);padding:11px 13px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;line-height:1.6}
+.norma-box strong{color:var(--text);font-weight:500}
+footer{text-align:center;padding:28px 20px 10px;font-size:10px;color:var(--dim);font-family:'DM Mono',monospace}
+
+/* iOS Safari fixes */
+body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+input,select,button{-webkit-appearance:none;border-radius:var(--radius-sm)}
+button{cursor:pointer}
+select{-webkit-appearance:none}
+/* Safe area insets for iPhone notch/Dynamic Island */
+header{padding-left:max(20px, env(safe-area-inset-left));padding-right:max(20px, env(safe-area-inset-right))}
+main{padding-left:max(16px, env(safe-area-inset-left));padding-right:max(16px, env(safe-area-inset-right))}
+body{padding-bottom:max(60px, calc(60px + env(safe-area-inset-bottom)))}
+/* Fix tap highlight on iOS */
+a,button,select,input{-webkit-tap-highlight-color:transparent}
+/* Prevent horizontal scroll on iOS */
+html,body{overflow-x:hidden;width:100%}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-row">
+    <div class="logo-left">
+      <div class="logo-icon">
+        <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 10h14M10 3l-4 7h8l-4 7" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="logo-text">Resistencia de <span>Devanados</span></div>
+    </div>
+    <img src="data:image/jpeg;base64,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bTNtp1rEV6Vbr+zmhlcXNEkJOtmO831NINvUtFOXkrGlFuJjlzxdmFEDq+ocOmZo9wUp5t0Y4VFswrC4aVgihY2Ng105nqTxJWa17XnctNKRSNQ7VFMQEBAQEHhQQu0Vc6IwBshiEsjmOcGZzYRucLNseYHJWUrvarLbWn3wKpkka4vuQHlrHlpjL2WHnFh4a3Hfa6jeIj09xzM72kyorFdix69WYs8Zic50DQCMwlY0OJPcfOb4t71Z0fapjJ92v0sQVa5F7SySxwSTRSbt0THyei1wdYXAN+ClWI3pC+9eHZQMeGDO8yOOt7Nbx5WC8n29r6dBXiSu4Zj29qXRl8ZjfvGxgEZg6EgPzfe1I7mKy2PVdwprk3bSxqtcjMZq3s3UcZAfPIIg4i4aMrnuNuZs0gDqVKsb8oXtMenzwqrJlkhdM2YsAdq3I8akOuAA0t4WI70tHjbys+dJZQWImqmlknMEb901kbJXOytc4l7nNa0B2gHmG/iFOI8bVTMzOofXBat0jXtfYvhkfCSBYOsAQ4Dlo4XHW6XjXp7Sdx5SKgsVaTHZWeUh+UZTPuHW0vENWO6u5jqL9Fd0ROmf6kxtaGKqfa+HLjE5iglkbYOZHI8eLWkjRe1jc6eWnUOiF12g8yAfyXk+3senryACToBqmtk+EBs5jhqHva50ZDxv4w0tuIy4tyuAPpCzT/H3Ky9Yjyqx33KwhVrnqAgICAg8Qc9RSNkdG83vC5z226lpab9dHFImYeTWJ9uhHoQgjRg0QjbEAQGObIHC2fMHZ8xdbiTx8VLqnaHRCTCim56+lbNG+J18kjXMNtDYixsV7E68vJjcafZjbC3TReERokbcEXIuCLjiL9EeuAYREGxMAI3BY5pFs12i2rudwSD1updcodEJFRTctfRMnblffQhwIJDmuHBzSOBXsWmEZrEvjQYW2JxkL5JZHAML5HXOUG4aAAABfuSbbjRFIidpBeJOCuwxsrg8OkikaC3PGQDlOuU3BBF+oXsW0hau32oaNkLcjL2uXEkklziblzieJK8mdpVrp0Lx6jKrA4ZY3xODi2SQzHXUPJBu08uH5qcWmJ2hNImEm0KKb5VlOJWOjdfLI1zDbjZwsbFInU7eTG37Y2wA6AD2IPnWU4lY6Mkhr2lpsbGx0NikGtvi7DY80bwMrocwblsNHCxaeo4ewL3qlHojbsC8TeoCAgIPUBAsgIPLIFkCyD2yAgWQeWQeoPLIFkCyD2yDyyD2yAgICBZAsg8sgWQe2QLIFkBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQf/Z" style="height:44px;width:auto;object-fit:contain;border-radius:7px;" alt="Electropatagonia">
+  </div>
+</header>
+
+<main>
+
+<!-- SELECTOR TIPO -->
+<div class="card">
+  <div class="card-title">Tipo de transformador</div>
+  <div class="tipo-selector">
+    <button class="tipo-btn active" id="btnStd"  onclick="setTipo('std')">Trif&#225;sico est&#225;ndar</button>
+    <button class="tipo-btn"        id="btnHexa" onclick="setTipo('hexa')">Hexaf&#225;sico 13,2 kV / 2 bobinas BT</button>
+  </div>
+</div>
+
+<!-- ======================================================
+     SECCI&#211;N EST&#193;NDAR
+====================================================== -->
+<div id="secStd">
+
+  <div class="card">
+    <div class="card-title">Datos del transformador</div>
+    <div class="g3">
+      <div class="info-field">
+        <span class="info-label">Potencia nominal</span>
+        <select id="std_kva" onchange="calcCorrStd()">
+          <option value="">&#8212; seleccionar &#8212;</option>
+          <option value="10">10 kVA</option>
+          <option value="75">75 kVA</option>
+          <option value="100">100 kVA</option>
+          <option value="200">200 kVA</option>
+          <option value="250">250 kVA</option>
+          <option value="350">350 kVA</option>
+        </select>
+      </div>
+      <div class="info-field">
+        <span class="info-label">Tensi&#243;n primaria</span>
+        <select id="std_vat" onchange="calcCorrStd()">
+          <option value="">&#8212; seleccionar &#8212;</option>
+          <option value="0.48">0,48 kV</option>
+          <option value="13.2">13,2 kV</option>
+          <option value="10.4">10,4 kV</option>
+          <option value="33">33 kV</option>
+          <option value="otro">Otro</option>
+        </select>
+      </div>
+      <div class="info-field">
+        <span class="info-label">Tensi&#243;n secundaria</span>
+        <select id="std_vbt" onchange="calcCorrStd()">
+          <option value="">&#8212; seleccionar &#8212;</option>
+          <option value="0.40">0,40 kV</option>
+          <option value="0.48">0,48 kV</option>
+          <option value="2.2">2,2 kV</option>
+          <option value="3.05">3,05 kV</option>
+          <option value="3.6">3,6 kV</option>
+          <option value="3.9">3,9 kV</option>
+          <option value="6.6">6,6 kV</option>
+        </select>
+      </div>
+    </div>
+    <div class="corriente-box" id="std_corrBox">
+      <div class="corr-title">Corriente nominal &#8212; Ensayo RK 450A (&#8804;10% de In)</div>
+      <div class="corriente-grid">
+        <div class="corriente-item">
+          <span class="corriente-label">In AT (primario)</span>
+          <span class="corriente-val" id="std_inAT">&#8212;</span>
+          <span class="corriente-sub" id="std_ensAT">&#8212;</span>
+        </div>
+        <div class="corriente-item">
+          <span class="corriente-label">In BT (secundario)</span>
+          <span class="corriente-val" id="std_inBT">&#8212;</span>
+          <span class="corriente-sub" id="std_ensBT">&#8212;</span>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="info-field">
+        <span class="info-label">Estado del conmutador</span>
+        <select id="std_conm" onchange="updBadge('std_conm','std_badge')">
+          <option value="normal">Normal</option>
+          <option value="dudoso">Dudoso</option>
+          <option value="malo">Malo</option>
+        </select>
+      </div>
+      <div id="std_badge" class="conm-badge badge-normal">&#9679; Normal</div>
+    </div>
+  </div>
+
+  <div class="winding-card">
+    <div class="winding-header"><div class="winding-title">Bobinado AT &#8212; alta tensi&#243;n</div></div>
+    <div class="tap-tabs" id="tabs-at"></div>
+    <div id="panels-at"></div>
+  </div>
+
+  <div class="winding-card">
+    <div class="winding-header"><div class="winding-title">Bobinado BT &#8212; baja tensi&#243;n</div></div>
+    <div class="tap-tabs" id="tabs-bt"></div>
+    <div id="panels-bt"></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-calc" onclick="calcStd()">Calcular todos los taps</button>
+    <button class="btn-clear" onclick="limpStd()">Limpiar</button>
+  </div>
+  <div class="error-msg" id="std_err">&#9888; Ingres&#225; al menos un tap completo (R, S y T) de AT o BT.</div>
+
+  <div class="result-section" id="std_res">
+    <div class="verdict-card" id="std_vcard">
+      <div class="verdict-top">
+        <div><div class="verdict-label">Diagn&#243;stico global</div><div class="verdict-main" id="std_vmain"></div></div>
+        <div class="verdict-icon" id="std_vicon"></div>
+      </div>
+      <div class="verdict-desc" id="std_vdesc"></div>
+    </div>
+    <div class="metrics-strip" id="std_metrics"></div>
+    <div class="results-card" id="std_tblAT" style="display:none">
+      <div class="results-card-header">Resultados AT &#8212; alta tensi&#243;n</div>
+      <div class="table-scroll"><table>
+        <thead><tr><th>Tap</th><th>Fase R</th><th>Fase S</th><th>Fase T</th><th>Promedio</th><th>Desbalance</th><th>Estado</th></tr></thead>
+        <tbody id="std_bodyAT"></tbody>
+      </table></div>
+    </div>
+    <div class="results-card" id="std_tblBT" style="display:none">
+      <div class="results-card-header">Resultados BT &#8212; baja tensi&#243;n</div>
+      <div class="table-scroll"><table>
+        <thead><tr><th>Tap</th><th>Fase R</th><th>Fase S</th><th>Fase T</th><th>Promedio</th><th>Desbalance</th><th>Estado</th></tr></thead>
+        <tbody id="std_bodyBT"></tbody>
+      </table></div>
+    </div>
+    <div class="bars-card">
+      <div class="card-title" style="margin-bottom:12px;">Desbalance por tap</div>
+      <div id="std_bars"></div>
+      <div class="range-guide">
+        <div class="range-item"><span class="range-dot" style="background:#1a7a5e"></span>&#8804; 2% apto</div>
+        <div class="range-item"><span class="range-dot" style="background:#c0392b"></span>&gt; 2% no apto</div>
+      </div>
+    </div>
+    <div class="norma-box"><strong>Norma IEEE C57.12.90 / IEC 60076-1</strong><br>Desbalance &#8804; 2% &#8594; APTO &#183; &gt; 2% &#8594; NO APTO</div>
+  </div>
+
+</div><!-- /secStd -->
+
+<!-- ======================================================
+     SECCI&#211;N HEXAF&#193;SICA
+====================================================== -->
+<div id="secHexa" style="display:none">
+
+  <div class="card">
+    <div class="card-title">Datos del transformador hexaf&#225;sico</div>
+    <div class="g3">
+      <div class="info-field">
+        <span class="info-label">Potencia nominal</span>
+        <select id="hx_kva" onchange="calcCorrHexa()">
+          <option value="">&#8212; seleccionar &#8212;</option>
+          <option value="10">10 kVA</option>
+          <option value="75">75 kVA</option>
+          <option value="100">100 kVA</option>
+          <option value="200">200 kVA</option>
+          <option value="250">250 kVA</option>
+          <option value="350">350 kVA</option>
+        </select>
+      </div>
+      <div class="info-field">
+        <span class="info-label">Tensi&#243;n primaria</span>
+        <select id="hx_vat">
+          <option value="13.2">13,2 kV</option>
+        </select>
+      </div>
+      <div class="info-field">
+        <span class="info-label">Tensi&#243;n sec. (c/bobina)</span>
+        <select id="hx_vbt" onchange="calcCorrHexa()">
+          <option value="">&#8212; seleccionar &#8212;</option>
+          <option value="0.40">0,40 kV</option>
+          <option value="0.48">0,48 kV</option>
+          <option value="2.2">2,2 kV</option>
+          <option value="3.05">3,05 kV</option>
+          <option value="3.6">3,6 kV</option>
+          <option value="3.9">3,9 kV</option>
+          <option value="6.6">6,6 kV</option>
+        </select>
+      </div>
+    </div>
+    <div class="corriente-box" id="hx_corrBox">
+      <div class="corr-title">Corriente nominal &#8212; Ensayo RK 450A (&#8804;10% de In)</div>
+      <div class="corriente-grid-3">
+        <div class="corriente-item">
+          <span class="corriente-label">In AT (primario)</span>
+          <span class="corriente-val" id="hx_inAT">&#8212;</span>
+          <span class="corriente-sub" id="hx_ensAT">&#8212;</span>
+        </div>
+        <div class="corriente-item">
+          <span class="corriente-label">In BT Bobina 1</span>
+          <span class="corriente-val" id="hx_inBT1">&#8212;</span>
+          <span class="corriente-sub" id="hx_ensBT1">&#8212;</span>
+        </div>
+        <div class="corriente-item">
+          <span class="corriente-label">In BT Bobina 2 Neutro</span>
+          <span class="corriente-val" id="hx_inBT2N">&#8212;</span>
+          <span class="corriente-sub" id="hx_ensBT2N">&#8212;</span>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="info-field">
+        <span class="info-label">Estado del conmutador</span>
+        <select id="hx_conm" onchange="updBadge('hx_conm','hx_badge')">
+          <option value="normal">Normal</option>
+          <option value="dudoso">Dudoso</option>
+          <option value="malo">Malo</option>
+        </select>
+      </div>
+      <div id="hx_badge" class="conm-badge badge-normal">&#9679; Normal</div>
+    </div>
+  </div>
+
+  <!-- Primario AT RST -->
+  <div class="winding-card">
+    <div class="winding-header"><div class="winding-title">Primario AT &#8212; 13,2 kV (R &#183; S &#183; T)</div></div>
+    <div class="tap-tabs" id="tabs-hxat"></div>
+    <div id="panels-hxat"></div>
+  </div>
+
+  <!-- Bobina 1 RST -->
+  <div class="hexa-bobina-card">
+    <div class="hexa-bobina-header"><div class="hexa-bobina-title">Bobina 1 (R &#183; S &#183; T)</div></div>
+    <div class="tap-tabs" id="tabs-hxbt1"></div>
+    <div id="panels-hxbt1"></div>
+  </div>
+
+  <!-- Bobina 2 Neutro RN SN TN -->
+  <div class="hexa-bobina-card">
+    <div class="hexa-bobina-header"><div class="hexa-bobina-title">Bobina 2 Neutro (R-N &#183; S-N &#183; T-N)</div></div>
+    <div class="tap-tabs" id="tabs-hxbt2n"></div>
+    <div id="panels-hxbt2n"></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-calc" onclick="calcHexa()">Calcular hexaf&#225;sico</button>
+    <button class="btn-clear" onclick="limpHexa()">Limpiar</button>
+  </div>
+  <div class="error-msg" id="hx_err">&#9888; Ingres&#225; al menos un tap completo en alg&#250;n bobinado.</div>
+
+  <div class="result-section" id="hx_res">
+    <div class="verdict-card" id="hx_vcard">
+      <div class="verdict-top">
+        <div><div class="verdict-label">Diagn&#243;stico global &#8212; hexaf&#225;sico</div><div class="verdict-main" id="hx_vmain"></div></div>
+        <div class="verdict-icon" id="hx_vicon"></div>
+      </div>
+      <div class="verdict-desc" id="hx_vdesc"></div>
+    </div>
+    <div class="metrics-strip" id="hx_metrics"></div>
+    <div class="results-card" id="hx_tblAT" style="display:none">
+      <div class="results-card-header">Primario AT &#8212; 13,2 kV</div>
+      <div class="table-scroll"><table>
+        <thead><tr><th>Tap</th><th>R</th><th>S</th><th>T</th><th>Promedio</th><th>Desbalance</th><th>Estado</th></tr></thead>
+        <tbody id="hx_bodyAT"></tbody>
+      </table></div>
+    </div>
+    <div class="results-card" id="hx_tblBT1" style="display:none">
+      <div class="results-card-header">Bobina 1 (R &#183; S &#183; T)</div>
+      <div class="table-scroll"><table>
+        <thead><tr><th>Tap</th><th>R</th><th>S</th><th>T</th><th>Promedio</th><th>Desbalance</th><th>Estado</th></tr></thead>
+        <tbody id="hx_bodyBT1"></tbody>
+      </table></div>
+    </div>
+    <div class="results-card" id="hx_tblBT2N" style="display:none">
+      <div class="results-card-header">Bobina 2 Neutro (R-N &#183; S-N &#183; T-N)</div>
+      <div class="table-scroll"><table>
+        <thead><tr><th>Tap</th><th>R-N</th><th>S-N</th><th>T-N</th><th>Promedio</th><th>Desbalance</th><th>Estado</th></tr></thead>
+        <tbody id="hx_bodyBT2N"></tbody>
+      </table></div>
+    </div>
+    <div class="bars-card">
+      <div class="card-title" style="margin-bottom:12px;">Desbalance por tap &#8212; hexaf&#225;sico</div>
+      <div id="hx_bars"></div>
+      <div class="range-guide">
+        <div class="range-item"><span class="range-dot" style="background:#1a7a5e"></span>&#8804; 2% apto</div>
+        <div class="range-item"><span class="range-dot" style="background:#c0392b"></span>&gt; 2% no apto</div>
+      </div>
+    </div>
+    <div class="norma-box"><strong>Norma IEEE C57.12.90 / IEC 60076-1</strong><br>Desbalance &#8804; 2% &#8594; APTO &#183; &gt; 2% &#8594; NO APTO</div>
+  </div>
+
+</div><!-- /secHexa -->
+
+</main>
+<footer>Resistencia de Devanados (Electropatagonia) &#183; sin conexi&#243;n a internet</footer>
+
+<script>
+var TAPS = 9;
+var RK = [0.01, 0.1, 1, 5, 10];
+
+function gv(id) {
+  var v = parseFloat(document.getElementById(id).value);
+  return (isNaN(v) || v <= 0) ? null : v;
+}
+function col(p) { return p <= 2 ? '#1a7a5e' : '#c0392b'; }
+function bw(p)  { return Math.min((p / 3) * 100, 100).toFixed(2); }
+function fmtA(v) {
+  if (v === null) return '&#8212;';
+  if (v < 1) return Math.round(v * 1000) + ' mA';
+  return (v % 1 === 0 ? String(v) : v.toFixed(1)) + ' A';
+}
+function fmtIn(v) { return v >= 100 ? v.toFixed(1) + ' A' : v.toFixed(2) + ' A'; }
+function rkElegida(inA) {
+  var lim = inA * 0.10, c = null, i;
+  for (i = 0; i < RK.length; i++) { if (RK[i] <= lim) c = RK[i]; }
+  return c;
+}
+function rkLabel(inA, c) {
+  if (!c) return 'In muy baja para el equipo';
+  return 'RK 450A: ' + fmtA(c) + ' (' + ((c / inA) * 100).toFixed(1) + '% de In)';
+}
+function estadoSpan(p) {
+  if (p <= 2) return '<span style="color:#1a7a5e;font-weight:600">&#10003; Apto</span>';
+  return '<span style="color:#c0392b;font-weight:600">&#10005; No apto</span>';
+}
+function calcDes(vals) {
+  var i, sum = 0, avg, maxD = 0, d;
+  for (i = 0; i < vals.length; i++) sum += vals[i];
+  avg = sum / vals.length;
+  for (i = 0; i < vals.length; i++) { d = Math.abs(vals[i] - avg); if (d > maxD) maxD = d; }
+  return { pct: (maxD / avg) * 100, avg: avg };
+}
+function updBadge(selId, badgeId) {
+  var v = document.getElementById(selId).value;
+  var lbl = { normal: '&#9679; Normal', dudoso: '&#9679; Dudoso', malo: '&#9679; Malo' };
+  var cls = { normal: 'badge-normal', dudoso: 'badge-dudoso', malo: 'badge-malo' };
+  var el = document.getElementById(badgeId);
+  el.innerHTML = lbl[v];
+  el.className = 'conm-badge ' + cls[v];
+}
+
+function buildWinding(wId, phases) {
+  var tabsEl   = document.getElementById('tabs-'   + wId);
+  var panelsEl = document.getElementById('panels-' + wId);
+  if (!tabsEl || !panelsEl) return;
+  var dotMap = { r: 'dot-r', s: 'dot-s', t: 'dot-t', rn: 'dot-r', sn: 'dot-s', tn: 'dot-t' };
+  var nameMap = { r: 'R', s: 'S', t: 'T', rn: 'R-N', sn: 'S-N', tn: 'T-N' };
+  var t, pi, ph, btn, panel, grid, field, lbl, dot, inp;
+
+  for (t = 1; t <= TAPS; t++) {
+    btn = document.createElement('button');
+    btn.className = 'tap-btn' + (t === 1 ? ' active' : '');
+    btn.textContent = String(t);
+    btn.id = 'tab-' + wId + '-' + t;
+    (function(w, n) {
+      btn.addEventListener('click', function() { switchTap(w, n); });
+    }(wId, t));
+    tabsEl.appendChild(btn);
+
+    panel = document.createElement('div');
+    panel.className = 'tap-panel' + (t === 1 ? ' active' : '');
+    panel.id = 'panel-' + wId + '-' + t;
+
+    grid = document.createElement('div');
+    grid.className = 'phase-grid';
+
+    for (pi = 0; pi < phases.length; pi++) {
+      ph = phases[pi];
+      field = document.createElement('div');
+      field.className = 'phase-field';
+
+      lbl = document.createElement('span');
+      lbl.className = 'phase-label';
+      dot = document.createElement('span');
+      dot.className = 'phase-dot ' + (dotMap[ph] || 'dot-r');
+      lbl.appendChild(dot);
+      lbl.appendChild(document.createTextNode(' Fase ' + (nameMap[ph] || ph.toUpperCase())));
+      field.appendChild(lbl);
+
+      inp = document.createElement('input');
+      inp.type = 'number';
+      inp.id = wId + '_' + ph + '_' + t;
+      inp.placeholder = '0.0000';
+      inp.setAttribute('inputmode', 'decimal');
+      inp.setAttribute('step', 'any');
+      (function(w, n, snap) {
+        inp.addEventListener('input', function() { markTap(w, n, snap); });
+      }(wId, t, phases.slice()));
+      field.appendChild(inp);
+      grid.appendChild(field);
+    }
+
+    panel.appendChild(grid);
+    var hint = document.createElement('div');
+    hint.className = 'unit-hint';
+    hint.textContent = 'Ω o mΩ — misma unidad en todos los taps';
+    panel.appendChild(hint);
+    panelsEl.appendChild(panel);
+  }
+}
+
+function switchTap(wId, t) {
+  var i;
+  for (i = 1; i <= TAPS; i++) {
+    document.getElementById('tab-'   + wId + '-' + i).classList.toggle('active', i === t);
+    document.getElementById('panel-' + wId + '-' + i).classList.toggle('active', i === t);
+  }
+}
+
+function markTap(wId, t, phases) {
+  var i, any = false;
+  for (i = 0; i < phases.length; i++) {
+    if (gv(wId + '_' + phases[i] + '_' + t)) { any = true; break; }
+  }
+  document.getElementById('tab-' + wId + '-' + t).classList.toggle('has-data', any);
+}
+
+function getData(wId, phases) {
+  var out = [], t, i, vals, v, ok;
+  for (t = 1; t <= TAPS; t++) {
+    vals = []; ok = true;
+    for (i = 0; i < phases.length; i++) {
+      v = gv(wId + '_' + phases[i] + '_' + t);
+      if (v === null) { ok = false; break; }
+      vals.push(v);
+    }
+    if (ok) out.push({ tap: t, vals: vals, res: calcDes(vals) });
+  }
+  return out;
+}
+
+buildWinding('at',     ['r', 's', 't']);
+buildWinding('bt',     ['r', 's', 't']);
+buildWinding('hxat',   ['r', 's', 't']);
+buildWinding('hxbt1',  ['r', 's', 't']);
+buildWinding('hxbt2n', ['rn', 'sn', 'tn']);
+
+function setTipo(tipo) {
+  document.getElementById('secStd').style.display  = tipo === 'std'  ? '' : 'none';
+  document.getElementById('secHexa').style.display = tipo === 'hexa' ? '' : 'none';
+  document.getElementById('btnStd').classList.toggle('active',  tipo === 'std');
+  document.getElementById('btnHexa').classList.toggle('active', tipo === 'hexa');
+}
+
+function calcCorrStd() {
+  var kva = parseFloat(document.getElementById('std_kva').value);
+  var vat = parseFloat(document.getElementById('std_vat').value);
+  var vbt = parseFloat(document.getElementById('std_vbt').value);
+  var box = document.getElementById('std_corrBox');
+  if (isNaN(kva) || isNaN(vat) || isNaN(vbt) || !kva || !vat || !vbt) { box.style.display = 'none'; return; }
+  var sq3 = Math.sqrt(3), iAT = kva / (sq3 * vat), iBT = kva / (sq3 * vbt);
+  document.getElementById('std_inAT').textContent  = fmtIn(iAT);
+  document.getElementById('std_ensAT').textContent = rkLabel(iAT, rkElegida(iAT));
+  document.getElementById('std_inBT').textContent  = fmtIn(iBT);
+  document.getElementById('std_ensBT').textContent = rkLabel(iBT, rkElegida(iBT));
+  box.style.display = 'block';
+}
+
+function calcCorrHexa() {
+  var kva = parseFloat(document.getElementById('hx_kva').value);
+  var vat = parseFloat(document.getElementById('hx_vat').value);
+  var vbt = parseFloat(document.getElementById('hx_vbt').value);
+  var box = document.getElementById('hx_corrBox');
+  if (isNaN(kva) || isNaN(vbt) || !kva || !vbt) { box.style.display = 'none'; return; }
+  var sq3 = Math.sqrt(3), iAT = kva / (sq3 * vat), iBT = (kva / 2) / (sq3 * vbt);
+  document.getElementById('hx_inAT').textContent    = fmtIn(iAT);
+  document.getElementById('hx_ensAT').textContent   = rkLabel(iAT, rkElegida(iAT));
+  document.getElementById('hx_inBT1').textContent   = fmtIn(iBT);
+  document.getElementById('hx_ensBT1').textContent  = rkLabel(iBT, rkElegida(iBT));
+  document.getElementById('hx_inBT2N').textContent  = fmtIn(iBT);
+  document.getElementById('hx_ensBT2N').textContent = rkLabel(iBT, rkElegida(iBT));
+  box.style.display = 'block';
+}
+
+function renderVeredicto(cardId, mainId, iconId, descId, maxP, extra) {
+  var vc = document.getElementById(cardId);
+  vc.className = 'verdict-card ' + (maxP <= 2 ? 'v-ok' : 'v-fail');
+  document.getElementById(mainId).textContent = maxP <= 2 ? 'APTO PARA SERVICIO' : 'NO APTO PARA SERVICIO';
+  var vi = document.getElementById(iconId);
+  vi.textContent = maxP <= 2 ? '✓' : '✕';
+  vi.style.color  = maxP <= 2 ? '#1a7a5e' : '#c0392b';
+  document.getElementById(descId).textContent = maxP <= 2
+    ? 'Todos los taps dentro del límite admisible (≤2%). ' + extra
+    : 'Uno o más taps superan el 2%. Máximo: ' + maxP.toFixed(3) + '%. Requiere inspección.';
+}
+
+function renderMetrics(id, maxP, avgP, fuera, total) {
+  document.getElementById(id).innerHTML =
+    '<div class="metric-box"><div class="metric-lbl">Desbalance máximo</div><div class="metric-val" style="color:' + col(maxP) + '">' + maxP.toFixed(2) + '%</div></div>' +
+    '<div class="metric-box"><div class="metric-lbl">Promedio global</div><div class="metric-val" style="color:' + col(avgP) + '">' + avgP.toFixed(2) + '%</div></div>' +
+    '<div class="metric-box"><div class="metric-lbl">Taps fuera límite</div><div class="metric-val" style="color:' + (fuera > 0 ? '#c0392b' : '#1a7a5e') + '">' + fuera + '/' + total + '</div></div>';
+}
+
+function renderTabla(data, bodyId, cardId) {
+  var i, j, d, rows = '';
+  if (!data.length) { document.getElementById(cardId).style.display = 'none'; return; }
+  document.getElementById(cardId).style.display = 'block';
+  for (i = 0; i < data.length; i++) {
+    d = data[i];
+    rows += '<tr class="' + (d.res.pct > 2 ? 'row-fail' : '') + '"><td>TAP ' + d.tap + '</td>';
+    for (j = 0; j < d.vals.length; j++) rows += '<td>' + d.vals[j].toFixed(4) + '</td>';
+    rows += '<td>' + d.res.avg.toFixed(4) + '</td>';
+    rows += '<td class="td-pct" style="color:' + col(d.res.pct) + '">' + d.res.pct.toFixed(3) + '%</td>';
+    rows += '<td>' + estadoSpan(d.res.pct) + '</td></tr>';
+  }
+  document.getElementById(bodyId).innerHTML = rows;
+}
+
+function renderBarras(barsId, items) {
+  var i, it, html = '';
+  for (i = 0; i < items.length; i++) {
+    it = items[i];
+    html += '<div class="bar-row">' +
+      '<div class="bar-header"><span class="bar-name">' + it.label + '</span>' +
+      '<span class="bar-pct" style="color:' + col(it.pct) + '">' + it.pct.toFixed(3) + '%</span></div>' +
+      '<div class="bar-track"><div class="bar-fill" style="width:' + bw(it.pct) + '%;background:' + col(it.pct) + '"></div></div>' +
+      '</div>';
+  }
+  document.getElementById(barsId).innerHTML = html;
+}
+
+function allPcts(datasets) {
+  var i, j, out = [];
+  for (i = 0; i < datasets.length; i++)
+    for (j = 0; j < datasets[i].length; j++)
+      out.push(datasets[i][j].res.pct);
+  return out;
+}
+
+function calcStd() {
+  var err = document.getElementById('std_err');
+  err.style.display = 'none';
+  var dAT = getData('at', ['r', 's', 't']);
+  var dBT = getData('bt', ['r', 's', 't']);
+  if (!dAT.length && !dBT.length) { err.style.display = 'block'; return; }
+  var all = allPcts([dAT, dBT]), i, sum = 0, fuera = 0, maxP, avgP;
+  maxP = Math.max.apply(null, all);
+  for (i = 0; i < all.length; i++) { sum += all[i]; if (all[i] > 2) fuera++; }
+  avgP = sum / all.length;
+  renderVeredicto('std_vcard', 'std_vmain', 'std_vicon', 'std_vdesc', maxP,
+    'AT: ' + dAT.length + ' taps, BT: ' + dBT.length + ' taps.');
+  renderMetrics('std_metrics', maxP, avgP, fuera, all.length);
+  renderTabla(dAT, 'std_bodyAT', 'std_tblAT');
+  renderTabla(dBT, 'std_bodyBT', 'std_tblBT');
+  var items = [], i;
+  for (i = 0; i < dAT.length; i++) items.push({ label: 'AT · Tap ' + dAT[i].tap, pct: dAT[i].res.pct });
+  for (i = 0; i < dBT.length; i++) items.push({ label: 'BT · Tap ' + dBT[i].tap, pct: dBT[i].res.pct });
+  renderBarras('std_bars', items);
+  var rs = document.getElementById('std_res');
+  rs.style.display = 'block';
+  rs.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function calcHexa() {
+  var err = document.getElementById('hx_err');
+  err.style.display = 'none';
+  var dAT   = getData('hxat',   ['r', 's', 't']);
+  var dBT1  = getData('hxbt1',  ['r', 's', 't']);
+  var dBT2N = getData('hxbt2n', ['rn', 'sn', 'tn']);
+  if (!dAT.length && !dBT1.length && !dBT2N.length) { err.style.display = 'block'; return; }
+  var all = allPcts([dAT, dBT1, dBT2N]), i, sum = 0, fuera = 0, maxP, avgP;
+  maxP = Math.max.apply(null, all);
+  for (i = 0; i < all.length; i++) { sum += all[i]; if (all[i] > 2) fuera++; }
+  avgP = sum / all.length;
+  renderVeredicto('hx_vcard', 'hx_vmain', 'hx_vicon', 'hx_vdesc', maxP,
+    'AT: ' + dAT.length + ', Bob.1: ' + dBT1.length + ', Bob.2N: ' + dBT2N.length + ' taps.');
+  renderMetrics('hx_metrics', maxP, avgP, fuera, all.length);
+  renderTabla(dAT,   'hx_bodyAT',   'hx_tblAT');
+  renderTabla(dBT1,  'hx_bodyBT1',  'hx_tblBT1');
+  renderTabla(dBT2N, 'hx_bodyBT2N', 'hx_tblBT2N');
+  var items = [], i;
+  for (i = 0; i < dAT.length;   i++) items.push({ label: 'AT · Tap '          + dAT[i].tap,   pct: dAT[i].res.pct });
+  for (i = 0; i < dBT1.length;  i++) items.push({ label: 'Bobina 1 · Tap '    + dBT1[i].tap,  pct: dBT1[i].res.pct });
+  for (i = 0; i < dBT2N.length; i++) items.push({ label: 'Bob.2 Neutro · Tap '+ dBT2N[i].tap, pct: dBT2N[i].res.pct });
+  renderBarras('hx_bars', items);
+  var rs = document.getElementById('hx_res');
+  rs.style.display = 'block';
+  rs.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function limpWinding(wId, phases) {
+  var t, i;
+  for (t = 1; t <= TAPS; t++) {
+    for (i = 0; i < phases.length; i++)
+      document.getElementById(wId + '_' + phases[i] + '_' + t).value = '';
+    document.getElementById('tab-' + wId + '-' + t).classList.remove('has-data');
+  }
+  switchTap(wId, 1);
+}
+
+function limpStd() {
+  var i, ids = ['std_kva', 'std_vat', 'std_vbt'];
+  for (i = 0; i < ids.length; i++) document.getElementById(ids[i]).selectedIndex = 0;
+  document.getElementById('std_corrBox').style.display = 'none';
+  document.getElementById('std_conm').value = 'normal';
+  updBadge('std_conm', 'std_badge');
+  limpWinding('at', ['r', 's', 't']);
+  limpWinding('bt', ['r', 's', 't']);
+  document.getElementById('std_res').style.display = 'none';
+  document.getElementById('std_err').style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function limpHexa() {
+  var i, ids = ['hx_kva', 'hx_vbt'];
+  for (i = 0; i < ids.length; i++) document.getElementById(ids[i]).selectedIndex = 0;
+  document.getElementById('hx_corrBox').style.display = 'none';
+  document.getElementById('hx_conm').value = 'normal';
+  updBadge('hx_conm', 'hx_badge');
+  limpWinding('hxat',   ['r', 's', 't']);
+  limpWinding('hxbt1',  ['r', 's', 't']);
+  limpWinding('hxbt2n', ['rn', 'sn', 'tn']);
+  document.getElementById('hx_res').style.display = 'none';
+  document.getElementById('hx_err').style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
