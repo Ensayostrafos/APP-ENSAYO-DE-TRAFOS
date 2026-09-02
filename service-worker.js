@@ -3,10 +3,9 @@
 // Los ENVÍOS de datos (fetch al Apps Script) NO se cachean acá:
 // eso lo maneja la cola de "pendientes" dentro de ensayo_de_trafos.html.
 
-const CACHE_NAME = 'ensayo-trafos-v3';
+const CACHE_NAME = 'ensayo-trafos-v2';
 const ASSETS_TO_CACHE = [
   './ensayo_de_trafos.html',
-  './resistencia_devanados.html',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
