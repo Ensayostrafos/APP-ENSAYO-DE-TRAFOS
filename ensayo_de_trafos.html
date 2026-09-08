@@ -249,37 +249,43 @@
             </div>
           </div>
 
-          <div class="field">
-            <label for="indicePolarizacion">Índice de polarización <span class="required-mark">*</span></label>
-            <div class="select-wrap">
-              <select id="indicePolarizacion" name="indicePolarizacion" required>
-                <option value="" disabled selected>Elegir</option>
-                <option>menor o igual a 4</option><option>entre 4 y 3</option>
-                <option>entre 3 y 2</option><option>entre 2 y 1,5</option>
-                <option>menor que 1,5</option><option>menor que 1</option>
-              </select>
+          <div id="polarizacionAbsorcionBlock" class="hidden">
+            <div class="field">
+              <label for="indicePolarizacion">Índice de polarización <span class="required-mark">*</span></label>
+              <div class="select-wrap">
+                <select id="indicePolarizacion" name="indicePolarizacion">
+                  <option value="" disabled selected>Elegir</option>
+                  <option>Menor a 1</option>
+                  <option>Entre 1,1 y 1,5</option>
+                  <option>Entre 1,6 y 2</option>
+                  <option>Mayor a 2</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="relacionAbsorcion">Relación de Absorción <span class="required-mark">*</span></label>
+              <div class="select-wrap">
+                <select id="relacionAbsorcion" name="relacionAbsorcion">
+                  <option value="" disabled selected>Elegir</option>
+                  <option>Menor a 1</option>
+                  <option>Entre 1,1 y 1,25</option>
+                  <option>Entre 1,26 y 1,6</option>
+                  <option>Mayor a 1,6</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          <div class="field">
-            <label for="relacionAbsorcion">Relación de Absorción <span class="required-mark">*</span></label>
-            <div class="select-wrap">
-              <select id="relacionAbsorcion" name="relacionAbsorcion" required>
-                <option value="" disabled selected>Elegir</option>
-                <option>menor o igual a 1,6</option><option>entre 1,6 y 1,4</option>
-                <option>entre 1,4 y 1,25</option><option>entre 1,25 y 1,1</option>
-                <option>menor a 1,1</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="field">
-            <label for="desviacionResistencia">Desviación de la resistencia de devanado <span class="required-mark">*</span></label>
-            <div class="select-wrap">
-              <select id="desviacionResistencia" name="desviacionResistencia" required>
-                <option value="" disabled selected>Elegir</option>
-                <option>Menor a 2%</option><option>Entre 2% y 5%</option><option>Mayor a 5%</option><option>Sin medición</option>
-              </select>
+          <div id="desviacionBlock" class="hidden">
+            <div class="field">
+              <label for="desviacionResistencia">Desviación de la resistencia de devanado <span class="required-mark">*</span></label>
+              <div class="select-wrap">
+                <select id="desviacionResistencia" name="desviacionResistencia">
+                  <option value="" disabled selected>Elegir</option>
+                  <option>Menor a 2%</option><option>Entre 2% y 5%</option><option>Mayor a 5%</option><option>Sin medición</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -363,11 +369,6 @@
 
         <div id="searchStatus" class="status-msg"></div>
         <div id="listResults"></div>
-      </div>
-
-      <div class="card">
-        <button type="button" id="downloadBtn" class="btn-secondary" style="width:100%;">📥 Descargar planilla de ensayos (CSV)</button>
-        <div id="downloadStatus" class="status-msg"></div>
       </div>
 
       <div class="card result-card" id="resultCard">
@@ -618,11 +619,10 @@
   });
 
   // ---------- ENCLAVE AUTOMÁTICO DE "ESTADO PARA EL SERVICIO" ----------
-  // Según Desviación de resistencia de devanado y Estado del conmutador,
-  // se calcula automáticamente el Estado para el servicio más severo y
-  // se bloquea el campo para evitar que se pise a mano.
   const desviacionResistenciaSelect = document.getElementById('desviacionResistencia');
   const estadoConmutadorSelect = document.getElementById('estadoConmutador');
+  const indicePolarizacionSelect = document.getElementById('indicePolarizacion');
+  const relacionAbsorcionSelect = document.getElementById('relacionAbsorcion');
   const estadoServicioHint = document.createElement('p');
   estadoServicioHint.className = 'hint';
   estadoServicioHint.id = 'estadoServicioAutoHint';
@@ -634,29 +634,43 @@
     if (v === 'Menor a 2%') return 'Apto para servicio';
     if (v === 'Entre 2% y 5%') return 'Apto con observaciones';
     if (v === 'Mayor a 5%') return 'No apto para servicio';
-    return null; // "Sin medición" o sin elegir: no opina
+    return null;
   }
   function severidadConmutador(v){
     if (v === 'Dudoso') return 'Apto con observaciones';
     if (v === 'Defectuoso') return 'No apto para servicio';
-    return null; // "Normal" o sin elegir: no opina
+    return null;
+  }
+  function severidadIndicePolarizacion(v){
+    if (v === 'Menor a 1') return 'No apto para servicio';
+    if (v === 'Entre 1,1 y 1,5') return 'Apto con observaciones';
+    if (v === 'Entre 1,6 y 2') return 'Apto para servicio';
+    if (v === 'Mayor a 2') return 'Apto para servicio';
+    return null;
+  }
+  function severidadRelacionAbsorcion(v){
+    if (v === 'Menor a 1') return 'No apto para servicio';
+    if (v === 'Entre 1,1 y 1,25') return 'Apto con observaciones';
+    if (v === 'Entre 1,26 y 1,6') return 'Apto para servicio';
+    if (v === 'Mayor a 1,6') return 'Apto para servicio';
+    return null;
   }
 
   function recalcularEstadoServicio(){
-    // Si "Requiere reparación" ya está activo, ese enclave manda y no tocamos nada acá.
     if (estadoVisual.value === 'Requiere reparación') return;
 
     const candidatos = [
       severidadDesviacion(desviacionResistenciaSelect.value),
-      severidadConmutador(estadoConmutadorSelect.value)
+      severidadConmutador(estadoConmutadorSelect.value),
+      severidadIndicePolarizacion(indicePolarizacionSelect.value),
+      severidadRelacionAbsorcion(relacionAbsorcionSelect.value)
     ].filter(Boolean);
 
     if (candidatos.length > 0){
-      // Nos quedamos con el más severo (No apto > Apto con observaciones > Apto para servicio)
       const masSevero = candidatos.reduce((a,b) => (SEVERIDAD[b] > SEVERIDAD[a] ? b : a));
       estadoServicio.value = masSevero;
       estadoServicio.disabled = true;
-      estadoServicioHint.textContent = 'Estado calculado automáticamente según la Desviación de resistencia y el Estado del conmutador.';
+      estadoServicioHint.textContent = 'Estado calculado automáticamente según los resultados de los ensayos.';
     } else if (ubicacionSelect.value === 'POZO'){
       estadoServicio.value = 'En uso';
       estadoServicio.disabled = false;
@@ -670,6 +684,33 @@
 
   desviacionResistenciaSelect.addEventListener('change', recalcularEstadoServicio);
   estadoConmutadorSelect.addEventListener('change', recalcularEstadoServicio);
+  indicePolarizacionSelect.addEventListener('change', recalcularEstadoServicio);
+  relacionAbsorcionSelect.addEventListener('change', recalcularEstadoServicio);
+
+  // ---------- ACTIVAR BLOQUES SEGÚN "ENSAYOS REALIZADOS" ----------
+  const ensayoAislacionCheck = document.getElementById('ensayoAislacion');
+  const ensayoResistenciaCheck = document.getElementById('ensayoResistencia');
+  const polarizacionAbsorcionBlock = document.getElementById('polarizacionAbsorcionBlock');
+  const desviacionBlock = document.getElementById('desviacionBlock');
+
+  function actualizarBloquesEnsayo(){
+    const aislacion = ensayoAislacionCheck.checked;
+    const resistencia = ensayoResistenciaCheck.checked;
+
+    polarizacionAbsorcionBlock.classList.toggle('hidden', !aislacion);
+    indicePolarizacionSelect.required = aislacion;
+    relacionAbsorcionSelect.required = aislacion;
+    if (!aislacion){ indicePolarizacionSelect.value = ''; relacionAbsorcionSelect.value = ''; }
+
+    desviacionBlock.classList.toggle('hidden', !resistencia);
+    desviacionResistenciaSelect.required = resistencia;
+    if (!resistencia){ desviacionResistenciaSelect.value = ''; }
+
+    recalcularEstadoServicio();
+  }
+
+  ensayoAislacionCheck.addEventListener('change', actualizarBloquesEnsayo);
+  ensayoResistenciaCheck.addEventListener('change', actualizarBloquesEnsayo);
 
   // ---------- FOTOS OBLIGATORIAS ----------
   const fotoPlaca = document.getElementById('fotoPlaca');
@@ -698,22 +739,31 @@
 
     if (requiereReparacion){
       camposEnsayoCard.classList.add('hidden');
-      camposEnsayoInputs.forEach(el => { el.required = false; el.value = ''; });
+      camposEnsayoInputs.forEach(el => {
+        el.required = false;
+        if (el.type === 'checkbox') el.checked = false; else el.value = '';
+      });
+      polarizacionAbsorcionBlock.classList.add('hidden');
+      desviacionBlock.classList.add('hidden');
       estadoServicio.value = 'No apto para servicio';
       estadoServicio.disabled = true;
+      estadoServicioHint.textContent = '';
       comentariosField.placeholder = 'Describí la anomalía / motivo de la reparación';
       estadoVisualHint.textContent = 'Como requiere reparación, el trafo queda marcado "No apto para servicio". Completá observaciones y adjuntá las fotos.';
     } else {
       camposEnsayoCard.classList.remove('hidden');
-      camposEnsayoInputs.forEach(el => { el.required = true; });
+      estadoConmutadorSelect.required = true;
       estadoServicio.disabled = false;
       estadoServicio.value = '';
       comentariosField.placeholder = '';
       estadoVisualHint.textContent = '';
-      recalcularEstadoServicio();
+      actualizarBloquesEnsayo();
     }
     actualizarLabelsFotos();
   });
+
+  // Estado inicial de los bloques condicionales al cargar la página
+  actualizarBloquesEnsayo();
 
   function fileToBase64(file){
     return new Promise((resolve, reject)=>{
@@ -984,41 +1034,6 @@
     }finally{
       searchEstadoBtn.disabled = false;
       searchEstadoBtn.textContent = 'Filtrar';
-    }
-  });
-
-  // ---------- DESCARGAR PLANILLA ----------
-  const downloadBtn = document.getElementById('downloadBtn');
-  const downloadStatus = document.getElementById('downloadStatus');
-
-  downloadBtn.addEventListener('click', async ()=>{
-    downloadStatus.className = 'status-msg';
-    downloadStatus.textContent = '';
-    if (!navigator.onLine){
-      downloadStatus.className = 'status-msg err';
-      downloadStatus.textContent = 'Necesitás conexión a internet para descargar la planilla.';
-      return;
-    }
-    downloadBtn.disabled = true;
-    downloadBtn.textContent = 'Generando...';
-    try{
-      const res = await fetch(`${APPS_SCRIPT_URL}?export=maestro`);
-      const csvText = await res.text();
-      const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `ensayos_trafos_${fechaDDMMAAAA()}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }catch(e){
-      downloadStatus.className = 'status-msg err';
-      downloadStatus.textContent = 'No se pudo descargar la planilla. Intentá de nuevo.';
-    }finally{
-      downloadBtn.disabled = false;
-      downloadBtn.textContent = '📥 Descargar planilla de ensayos (CSV)';
     }
   });
 
